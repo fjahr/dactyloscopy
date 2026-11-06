@@ -64,6 +64,54 @@
     margin: 0;
   }
 
+  /* Collapsed note for wallet maintainers. */
+  .maint {
+    margin: 0 0 28px;
+    max-width: 44em;
+    font-size: 0.95rem;
+  }
+
+  .maint summary { cursor: pointer; width: fit-content; color: var(--ink); }
+
+  .maint summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+
+  .maint-body {
+    margin: 12px 0 0 5px;
+    padding-left: 16px;
+    border-left: 1px solid var(--ridge);
+    color: var(--ink-soft);
+  }
+
+  .maint-body p { margin: 0 0 10px; }
+
+  .maint-body ul { margin: 0 0 14px; padding-left: 1.1em; }
+
+  .maint-head { color: var(--ink); font-weight: 600; }
+
+  .maint-body pre {
+    margin: 0 0 8px;
+    padding: 12px 14px;
+    background: #E8EBF0;
+    color: var(--ink);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    border-radius: 3px;
+  }
+
+  .maint-body button {
+    font: inherit;
+    font-size: 0.86rem;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ink-soft);
+    border-radius: 3px;
+    padding: 2px 10px;
+    cursor: pointer;
+  }
+
+  .maint-body button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
   /* Wallet filter above the columns. */
   .filter {
     display: flex;
@@ -229,6 +277,31 @@
       <p class="lede">Wallets give themselves away through small choices in how they build transactions. These open pull requests would change those choices.</p>
     </div>
   </header>
+
+  <details class="maint">
+    <summary>For wallet maintainers: let your review bot check fingerprints</summary>
+    <div class="maint-body">
+      <p>Fingerprints change one pull request at a time. Ask your code review bot to check every PR that touches transaction building against what other wallets do and against the open PRs listed here.</p>
+      <p class="maint-head">Good defaults</p>
+      <ul>
+        <li>nVersion 2 and nSequence 0xFFFFFFFD.</li>
+        <li>nLockTime at the current block height (anti-fee-sniping), never lowered on a fee bump.</li>
+        <li>Shuffled inputs and outputs, so the change position is random.</li>
+        <li>Change output of the same type as the payment.</li>
+        <li>Low-R ECDSA signatures; taproot key-path spends with the default sighash.</li>
+        <li>No OP_RETURN and no round-number fee rate unless the user asks for one.</li>
+        <li>Payjoin receivers avoid the unnecessary-input heuristic (UIH2) and add confirmed inputs.</li>
+      </ul>
+      <p class="maint-head">Instructions for your review bot</p>
+      <p>Add this to AGENTS.md, CLAUDE.md, .github/copilot-instructions.md or your bot's configuration.</p>
+      <pre id="bot-text">When a pull request changes how this wallet builds, signs or fee-bumps transactions, review its effect on wallet fingerprinting:
+1. List every on-chain property it changes: nVersion, nLockTime, nSequence, input and output order, change position and type, input types, low-R grinding, sighash type, fee-rate source or rounding, OP_RETURN, unconfirmed inputs, RBF or CPFP construction, coin selection, payjoin input selection.
+2. Compare the old and new behavior with the wallets in https://github.com/arminsabouri/walletfingerprints.info (fingerprints.json).
+3. Flag changes that move away from what most wallets do or introduce a value no other wallet uses. Say so when a change converges with other wallets.
+4. Check https://fjahr.github.io/dactyloscopy/prs.json for open pull requests in other wallets that change the same property, and link them so maintainers can coordinate.</pre>
+      <button type="button" id="copy-bot">Copy instructions</button>
+    </div>
+  </details>
 
   <div class="filter">
     <label for="wallet-filter">Show pull requests that move toward or away from</label>
@@ -433,6 +506,25 @@ select.addEventListener("change", () => {
     const url = select.value ? `?wallet=${encodeURIComponent(select.value)}` : location.pathname;
     history.replaceState(null, "", url);
   } catch (e) { /* file:// pages can't rewrite the URL; filtering still works */ }
+});
+
+// Copy the review-bot instructions.
+const copyBtn = document.getElementById("copy-bot");
+copyBtn.addEventListener("click", async () => {
+  const text = document.getElementById("bot-text").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = "Copied";
+  } catch (e) {
+    // Clipboard blocked: select the text so it can be copied by hand.
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById("bot-text"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    copyBtn.textContent = "Selected, press Cmd+C";
+  }
+  setTimeout(() => { copyBtn.textContent = "Copy instructions"; }, 2500);
 });
 
 const fromUrl = new URLSearchParams(location.search).get("wallet");

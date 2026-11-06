@@ -11,6 +11,8 @@ Wallets and their current fingerprints come from Armin Sabouri's [walletfingerpr
 
 `index.html` is self-contained. Open it in a browser, or serve the folder with `python3 -m http.server`.
 
+`prs.json` has the same list in machine-readable form, for review bots. The maintainer note on the page has instructions to paste into a bot's configuration.
+
 ## Update
 
 `RESCAN.md` describes how to scan for new pull requests, judge them and rebuild the page with `python3 build.py`.

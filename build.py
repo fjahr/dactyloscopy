@@ -54,6 +54,18 @@ def main():
     html = html.replace("__DATA__", data).replace("__CHECKED__", checked)
     open(os.path.join(HERE, "index.html"), "w").write(html)
 
+    # Machine-readable list for review bots (linked from the maintainer note on the page).
+    listing = {
+        "about": "Open pull requests that change on-chain wallet fingerprints. "
+                 "red: transactions get easier to single out. green: they move toward what most wallets do. "
+                 "toward/away: catalog wallets (walletfingerprints.info) the PR converges with or moves away from, by trait.",
+        "checked": checked,
+        "prs": [{k: v for k, v in p.items() if k != "ridge"} for p in sorted(prs, key=lambda p: p["date"], reverse=True)],
+    }
+    with open(os.path.join(HERE, "prs.json"), "w") as f:
+        json.dump(listing, f, indent=1, ensure_ascii=False)
+        f.write("\n")
+
     red = sum(p["verdict"] == "red" for p in prs)
     print(f"index.html: {len(prs)} pull requests ({red} red, {len(prs) - red} green)")
     skipped = sum(verdicts[k]["verdict"] == "skip" for k in scanned if k in verdicts)

@@ -1,0 +1,540 @@
+{
+ "about": "Open pull requests that change on-chain wallet fingerprints. red: transactions get easier to single out. green: they move toward what most wallets do. toward/away: catalog wallets (walletfingerprints.info) the PR converges with or moves away from, by trait.",
+ "checked": "November 6, 2026",
+ "prs": [
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 3790,
+   "title": "Cw 1678 disable address types other than segwit and taproot by default",
+   "url": "https://github.com/cake-tech/cake_wallet/pull/3790",
+   "date": "2026-10-30",
+   "verdict": "green",
+   "reason": "Stops mixing legacy input types by default. Transactions use the common SegWit and taproot inputs.",
+   "toward": {
+    "Input types": [
+     "payjoin-cli",
+     "ldk-node",
+     "Bull Bitcoin",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 605,
+   "title": "Fix/build fee bump multi transaction",
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/605",
+   "date": "2026-10-19",
+   "verdict": "red",
+   "reason": "One replacement can merge several unconfirmed transactions, a shape few wallets produce.",
+   "toward": {},
+   "away": {
+    "Fee bump replacements": [
+     "Liana",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 599,
+   "title": "fix(wallet): avoid reissuing change address after reload",
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/599",
+   "date": "2026-10-13",
+   "verdict": "green",
+   "reason": "Stops two transactions from paying change to the same address.",
+   "toward": {},
+   "away": {}
+  },
+  {
+   "wallet": "payjoin-cli",
+   "repo": "payjoin/rust-payjoin",
+   "pr": 1966,
+   "title": "Payjoin-cli: add `--cut-through` mode",
+   "url": "https://github.com/payjoin/rust-payjoin/pull/1966",
+   "date": "2026-10-10",
+   "verdict": "red",
+   "reason": "Optional mode: the receiver tops up with its largest coins and skips the unnecessary-input check (UIH2).",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ],
+    "Number of recipients": [
+     "Liana",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "ldk-node",
+     "Liana",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ],
+    "Number of recipients": [
+     "ldk-node",
+     "Bull Bitcoin"
+    ]
+   }
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 575,
+   "title": "fix(wallet): filter uneconomical inputs from BnB fallback",
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/575",
+   "date": "2026-09-27",
+   "verdict": "green",
+   "reason": "Stops spending coins worth less than their fee, matching Bitcoin Core.",
+   "toward": {
+    "Coin selection": [
+     "Bitcoin Core"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "payjoin-cli",
+   "repo": "payjoin/rust-payjoin",
+   "pr": 1878,
+   "title": "Payjoin-cli : add `--consolidate` mode",
+   "url": "https://github.com/payjoin/rust-payjoin/pull/1878",
+   "date": "2026-09-14",
+   "verdict": "red",
+   "reason": "Optional mode: the receiver adds up to 10 small coins and skips the unnecessary-input check (UIH2).",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "ldk-node",
+     "Liana",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   }
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2811,
+   "title": "feat(bullvault): add descriptor wallet and vault workflows",
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2811",
+   "date": "2026-09-09",
+   "verdict": "red",
+   "reason": "Optional vaults: recovery spends reveal a timelock script and CSV sequence that few wallets produce.",
+   "toward": {
+    "Input types": [
+     "Liana"
+    ]
+   },
+   "away": {
+    "Input types": [
+     "payjoin-cli",
+     "ldk-node",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum"
+    ]
+   }
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 541,
+   "title": "feat(wallet): add TxBuilder::avoid_reuse to skip reused-address UTXOs",
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/541",
+   "date": "2026-09-02",
+   "verdict": "green",
+   "reason": "Optional: skips coins on reused addresses, matching Bitcoin Core's avoid_reuse.",
+   "toward": {
+    "Coins on reused addresses": [
+     "Bitcoin Core"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2712,
+   "title": "feat(payjoin): independent Receive / Trade / Send payjoin settings",
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2712",
+   "date": "2026-08-23",
+   "verdict": "green",
+   "reason": "Exchange orders default to payjoin, which looks like an ordinary payment on chain.",
+   "toward": {
+    "Payjoin on by default": [
+     "Cake Wallet"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 36040,
+   "title": "Wallet: Don't backdate locktime rbf",
+   "url": "https://github.com/bitcoin/bitcoin/pull/36040",
+   "date": "2026-08-20",
+   "verdict": "green",
+   "reason": "Fee bumps stop lowering nLockTime, a rare pattern that singled out Core and Electrum.",
+   "toward": {
+    "nLockTime of fee bumps": [
+     "ldk-node",
+     "Liana",
+     "Bull Bitcoin",
+     "Cake Wallet"
+    ]
+   },
+   "away": {
+    "nLockTime of fee bumps": [
+     "Electrum"
+    ]
+   }
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 3417,
+   "title": "fix silent OP_RETURN writting on bip-21 opening",
+   "url": "https://github.com/cake-tech/cake_wallet/pull/3417",
+   "date": "2026-07-18",
+   "verdict": "green",
+   "reason": "Payment-link messages stop becoming OP_RETURN outputs, which most wallets never add.",
+   "toward": {
+    "OP_RETURN outputs": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 10756,
+   "title": "Taproot swaps",
+   "url": "https://github.com/spesmilo/electrum/pull/10756",
+   "date": "2026-07-16",
+   "verdict": "green",
+   "reason": "Cooperative swap claims become ordinary taproot spends instead of revealing an HTLC script.",
+   "toward": {
+    "Taproot key-path spends": [
+     "Boltz",
+     "Liana",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Cake Wallet"
+    ],
+    "nLockTime": [
+     "Cake Wallet"
+    ]
+   },
+   "away": {
+    "nLockTime": [
+     "Bitcoin Core"
+    ]
+   }
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2431,
+   "title": "payjoin: exclude 0-conf inputs from receiver candidates",
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2431",
+   "date": "2026-07-09",
+   "verdict": "green",
+   "reason": "The payjoin receiver stops adding unconfirmed coins, like other payjoin receivers.",
+   "toward": {
+    "Payjoin unconfirmed inputs": [
+     "payjoin-cli",
+     "Liana",
+     "Boltz"
+    ]
+   },
+   "away": {
+    "Payjoin unconfirmed inputs": [
+     "BTCPay Server",
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "Liana",
+   "repo": "wizardsardine/liana",
+   "pr": 2192,
+   "title": "spend: deterministic, canonical input construction",
+   "url": "https://github.com/wizardsardine/liana/pull/2192",
+   "date": "2026-07-09",
+   "verdict": "red",
+   "reason": "Inputs get sorted by outpoint in an order no other wallet uses. Most wallets shuffle.",
+   "toward": {},
+   "away": {
+    "Input order": [
+     "payjoin-cli",
+     "ldk-node",
+     "Bull Bitcoin",
+     "BTCPay Server",
+     "Bitcoin Core"
+    ]
+   }
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 1430,
+   "title": "Payjoin integration",
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/1430",
+   "date": "2026-06-04",
+   "verdict": "red",
+   "reason": "The payjoin receiver adds its smallest fitting coin and skips the unnecessary-input check (UIH2).",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   }
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/bitcoin_base",
+   "pr": 12,
+   "title": "Fix RBF nsequence: canonical value, all inputs",
+   "url": "https://github.com/cake-tech/bitcoin_base/pull/12",
+   "date": "2026-06-02",
+   "verdict": "green",
+   "reason": "Every input gets the common RBF sequence number instead of a mix only Cake uses.",
+   "toward": {
+    "nSequence": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 35433,
+   "title": "wallet: deprecate replaceable argument from transaction (and psbt) creation (and modification) RPCs",
+   "url": "https://github.com/bitcoin/bitcoin/pull/35433",
+   "date": "2026-06-01",
+   "verdict": "green",
+   "reason": "Fewer Core transactions use the rare non-RBF sequence number.",
+   "toward": {
+    "nSequence": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "BTCPay Server",
+     "Electrum"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 10650,
+   "title": "submarine_swaps: Reintroduce support for the old submarine swap protocol",
+   "url": "https://github.com/spesmilo/electrum/pull/10650",
+   "date": "2026-05-15",
+   "verdict": "red",
+   "reason": "Swap server claims reveal a second, older HTLC script template.",
+   "toward": {},
+   "away": {}
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 828,
+   "title": "Add chain syncing via compact block filters (BIP 157)",
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/828",
+   "date": "2026-03-15",
+   "verdict": "red",
+   "reason": "Fee rates come from recent block averages, so payments stand out from mempool-based wallets.",
+   "toward": {},
+   "away": {
+    "Fee rate source": [
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "Liana",
+   "repo": "wizardsardine/liana",
+   "pr": 2011,
+   "title": "[WIP] Payjoin receiver",
+   "url": "https://github.com/wizardsardine/liana/pull/2011",
+   "date": "2026-02-10",
+   "verdict": "green",
+   "reason": "The payjoin receiver avoids the unnecessary-input heuristic (UIH2), like most payjoin receivers.",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "payjoin-cli",
+     "ldk-node",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 746,
+   "title": "Add Payjoin Receiver Support (BIP 77)",
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/746",
+   "date": "2026-01-08",
+   "verdict": "green",
+   "reason": "The payjoin receiver avoids the unnecessary-input heuristic (UIH2), like most payjoin receivers.",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "payjoin-cli",
+     "Liana",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 1164,
+   "title": "feat: funding addresses",
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/1164",
+   "date": "2025-12-19",
+   "verdict": "red",
+   "reason": "Every claim and refund moves to nVersion 3, which no other wallet uses yet.",
+   "toward": {},
+   "away": {
+    "nVersion": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "Bull Bitcoin",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 638,
+   "title": "Implement CPFP fee bumping for unconfirmed transactions",
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/638",
+   "date": "2025-09-17",
+   "verdict": "red",
+   "reason": "The CPFP child sends its output back to the address it spends from. No other wallet does this.",
+   "toward": {},
+   "away": {
+    "Change sent back to the spent address": [
+     "payjoin-cli",
+     "Liana",
+     "Boltz",
+     "Bull Bitcoin",
+     "BTCPay Server",
+     "Bitcoin Core",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   }
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 32857,
+   "title": "wallet: allow skipping script paths",
+   "url": "https://github.com/bitcoin/bitcoin/pull/32857",
+   "date": "2025-07-02",
+   "verdict": "green",
+   "reason": "Taproot spends can stay on the key path, so they look like any single-key taproot spend.",
+   "toward": {
+    "Taproot key-path spends": [
+     "Liana",
+     "Boltz",
+     "BTCPay Server",
+     "Electrum",
+     "Cake Wallet"
+    ]
+   },
+   "away": {}
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 892,
+   "title": "[Draft] Payjoin Submarine Swap Consolidation",
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/892",
+   "date": "2025-04-09",
+   "verdict": "green",
+   "reason": "The payjoin receiver avoids UIH2. Superseded by #1430, which drops the check.",
+   "toward": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "payjoin-cli",
+     "ldk-node",
+     "Liana",
+     "Bull Bitcoin",
+     "BTCPay Server"
+    ]
+   },
+   "away": {
+    "Payjoin unnecessary-input check (UIH2)": [
+     "Cake Wallet"
+    ]
+   }
+  }
+ ]
+}

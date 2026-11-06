@@ -164,7 +164,7 @@ Keep verdicts for PRs that are still open. `build.py` lists verdicts whose PR le
 python3 build.py
 ```
 
-This writes `index.html` with the data inlined, so the page works offline and from `file://`. The "as of" date comes from the newest scan file. The output lists PRs that still need a verdict.
+This writes `index.html` with the data inlined, so the page works offline and from `file://`. It also writes `prs.json`, the same list for review bots; the maintainer note on the page links to it. The "as of" date comes from the newest scan file. The output lists PRs that still need a verdict.
 
 ## Catalog discrepancies found in the November 2026 scan
 
