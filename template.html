@@ -61,6 +61,32 @@
     margin: 0;
   }
 
+  /* Wallet filter above the columns. */
+  .filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 12px;
+    margin: 0 0 44px;
+    font-size: 0.98rem;
+  }
+
+  .filter label { color: var(--ink-soft); }
+
+  .filter select {
+    font: inherit;
+    color: var(--ink);
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231A2233' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 2px center / 10px;
+    border: 0;
+    border-bottom: 1.5px solid var(--ink);
+    border-radius: 0;
+    padding: 1px 20px 1px 1px;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .filter select:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
   /* The two verdict columns. */
   .verdicts {
     display: grid;
@@ -125,6 +151,29 @@
     max-width: 36em;
   }
 
+  /* Collapsed list of wallets each PR moves toward or away from. */
+  .pr-rel {
+    margin-top: 6px;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+  }
+
+  .pr-rel summary { cursor: pointer; width: fit-content; }
+
+  .pr-rel summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 2px; }
+
+  .rel-group { margin: 8px 0 0 14px; }
+
+  .rel-head { margin: 0; color: var(--ink); font-weight: 600; }
+
+  .rel-group ul { list-style: none; margin: 1px 0 0; padding: 0; }
+
+  .rel-trait { color: var(--ink); }
+
+  .rel-hit { color: var(--ink); font-weight: 600; }
+
+  .empty { margin: 0; font-size: 0.96rem; color: var(--ink-soft); }
+
   .foot {
     margin-top: 56px;
     font-size: 0.86rem;
@@ -178,14 +227,21 @@
     </div>
   </header>
 
+  <div class="filter">
+    <label for="wallet-filter">Show pull requests that move toward or away from</label>
+    <select id="wallet-filter"><option value="">any wallet</option></select>
+  </div>
+
   <div class="verdicts">
     <section class="col col-red" aria-labelledby="red-head">
       <h2 id="red-head"></h2>
       <ul class="prs" id="red-list"></ul>
+      <p class="empty" id="red-empty" hidden>None for this wallet.</p>
     </section>
     <section class="col col-green" aria-labelledby="green-head">
       <h2 id="green-head"></h2>
       <ul class="prs" id="green-list"></ul>
+      <p class="empty" id="green-empty" hidden>None for this wallet.</p>
     </section>
   </div>
 
@@ -245,8 +301,53 @@ for (const p of PRS) {
   r.appendChild(t);
 }
 
-document.getElementById("red-head").textContent = `${red.length} easier to single out`;
-document.getElementById("green-head").textContent = `${green.length} blend in`;
+// Wallets each PR moves toward or away from (catalog wallets, grouped by trait).
+for (const p of PRS) {
+  p.towardSet = new Set(Object.values(p.toward).flat());
+  p.awaySet = new Set(Object.values(p.away).flat());
+}
+
+const plural = (n) => `${n} wallet${n === 1 ? "" : "s"}`;
+
+function relSummary(p, selected) {
+  if (selected) {
+    const t = p.towardSet.has(selected), a = p.awaySet.has(selected);
+    if (t && a) return `Converges with ${selected} in one way, moves away in another`;
+    return t ? `Converges with ${selected}` : `Moves away from ${selected}`;
+  }
+  const parts = [];
+  if (p.towardSet.size) parts.push(`Converges with ${plural(p.towardSet.size)}`);
+  if (p.awaySet.size) parts.push(`${parts.length ? "moves" : "Moves"} away from ${plural(p.awaySet.size)}`);
+  return parts.join(", ");
+}
+
+function relGroup(title, groups) {
+  const div = document.createElement("div");
+  div.className = "rel-group";
+  const head = document.createElement("p");
+  head.className = "rel-head";
+  head.textContent = title;
+  const ul = document.createElement("ul");
+  for (const [trait, wallets] of Object.entries(groups)) {
+    const li = document.createElement("li");
+    const t = document.createElement("span");
+    t.className = "rel-trait";
+    t.textContent = `${trait}: `;
+    li.append(t);
+    wallets.forEach((w, i) => {
+      const s = document.createElement("span");
+      s.dataset.wallet = w;
+      s.textContent = w;
+      li.append(s);
+      if (i < wallets.length - 1) li.append(", ");
+    });
+    ul.append(li);
+  }
+  div.append(head, ul);
+  return div;
+}
+
+const items = [];
 
 function item(p) {
   const li = document.createElement("li");
@@ -271,7 +372,19 @@ function item(p) {
 
   li.append(meta, a, reason);
 
-  const on = () => { print.classList.add("focus"); ridges[p.ridge].classList.add("on"); };
+  let summary = null;
+  if (p.towardSet.size || p.awaySet.size) {
+    const details = document.createElement("details");
+    details.className = "pr-rel";
+    summary = document.createElement("summary");
+    details.append(summary);
+    if (p.towardSet.size) details.append(relGroup("Converges with", p.toward));
+    if (p.awaySet.size) details.append(relGroup("Moves away from", p.away));
+    li.append(details);
+  }
+  items.push({ p, li, summary });
+
+  const on =() => { print.classList.add("focus"); ridges[p.ridge].classList.add("on"); };
   const off = () => { print.classList.remove("focus"); ridges[p.ridge].classList.remove("on"); };
   li.addEventListener("mouseenter", on);
   li.addEventListener("mouseleave", off);
@@ -283,6 +396,45 @@ function item(p) {
 const byDate = (a, b) => (b.date || "").localeCompare(a.date || "");
 red.sort(byDate).forEach((p) => document.getElementById("red-list").appendChild(item(p)));
 green.sort(byDate).forEach((p) => document.getElementById("green-list").appendChild(item(p)));
+
+// Filter: a maintainer picks their wallet and sees only PRs moving toward or away from it.
+const WALLET_LABEL = { "ldk-node": "ldk-node (BDK)" };
+const select = document.getElementById("wallet-filter");
+const allWallets = [...new Set(PRS.flatMap((p) => [...p.towardSet, ...p.awaySet]))]
+  .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+for (const w of allWallets) {
+  const o = document.createElement("option");
+  o.value = w;
+  o.textContent = WALLET_LABEL[w] || w;
+  select.append(o);
+}
+
+function applyFilter(selected) {
+  const shown = { red: 0, green: 0 };
+  for (const { p, li, summary } of items) {
+    const visible = !selected || p.towardSet.has(selected) || p.awaySet.has(selected);
+    li.hidden = !visible;
+    if (visible) shown[p.verdict]++;
+    if (summary) summary.textContent = relSummary(p, selected);
+    li.querySelectorAll("[data-wallet]").forEach((s) => s.classList.toggle("rel-hit", s.dataset.wallet === selected));
+  }
+  document.getElementById("red-head").textContent = `${shown.red} easier to single out`;
+  document.getElementById("green-head").textContent = `${shown.green} blend in`;
+  document.getElementById("red-empty").hidden = shown.red > 0;
+  document.getElementById("green-empty").hidden = shown.green > 0;
+}
+
+select.addEventListener("change", () => {
+  applyFilter(select.value);
+  try {
+    const url = select.value ? `?wallet=${encodeURIComponent(select.value)}` : location.pathname;
+    history.replaceState(null, "", url);
+  } catch (e) { /* file:// pages can't rewrite the URL; filtering still works */ }
+});
+
+const fromUrl = new URLSearchParams(location.search).get("wallet");
+if (fromUrl && allWallets.includes(fromUrl)) select.value = fromUrl;
+applyFilter(select.value);
 </script>
 </body>
 </html>

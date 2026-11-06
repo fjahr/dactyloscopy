@@ -39,6 +39,9 @@ def main():
                 "date": e.get("date", ""),
                 "verdict": v["verdict"],
                 "reason": v["reason"],
+                # Catalog wallets this PR moves toward / away from, grouped by trait.
+                "toward": v.get("toward", {}),
+                "away": v.get("away", {}),
             })
 
     # Oldest pull request sits at the core of the fingerprint.

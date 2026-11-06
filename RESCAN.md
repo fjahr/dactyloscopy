@@ -137,6 +137,25 @@ Then write one entry per scanned PR in `data/verdicts.json`, keyed by `owner/rep
 
 Reason style: one sentence, about 16 words or fewer, saying what an observer would notice. Spell out jargon once, e.g. "the unnecessary-input check (UIH2)". Start with "Optional" for opt-in features.
 
+Each red or green verdict also lists the catalog wallets the PR moves toward and away from. These feed the collapsible lists and the wallet filter on the page.
+
+```json
+"owner/repo#123": {
+  "verdict": "red",
+  "reason": "...",
+  "toward": {"Payjoin unnecessary-input check (UIH2)": ["Cake Wallet"]},
+  "away": {"Payjoin unnecessary-input check (UIH2)": ["ldk-node", "Liana", "Boltz"]}
+}
+```
+
+- **toward:** wallets whose catalog value already matches the new behavior.
+- **away:** wallets whose catalog value matches the old behavior.
+- Use the exact catalog wallet names, and leave out the PR's own wallet. For BDK PRs, the own wallet is ldk-node.
+- Group the wallets by a short, plain trait label, and reuse labels already in the file, e.g. "nSequence", "Input order", "Taproot key-path spends".
+- Ignore "N/A" catalog values.
+- Leave both empty (`{}`) when the catalog doesn't cover the trait. The PR still shows on the page, but without a wallet list.
+- Fill these in by hand from `data/trait_distribution.json`. Matching the scan text against the catalog automatically gives misleading results: before and after often contain the same catalog phrase and cancel out.
+
 Keep verdicts for PRs that are still open. `build.py` lists verdicts whose PR left the scans, because it was closed or merged; delete those.
 
 ## Build
