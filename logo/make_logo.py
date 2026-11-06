@@ -5,7 +5,9 @@ so the logo renders the same everywhere. Needs macOS (for the font) and fontTool
   python3 -m venv /tmp/logo-venv && /tmp/logo-venv/bin/pip install fonttools
   /tmp/logo-venv/bin/python logo/make_logo.py
 Writes logo/dactyloscopy-logo.svg (dark text, for light backgrounds) and
-logo/dactyloscopy-logo-dark.svg (light text, for dark backgrounds).
+logo/dactyloscopy-logo-dark.svg (light text, for dark backgrounds), and
+logo/dactyloscopy-card.svg: the logo centered on white at 1200x600, for project cards that
+crop with object-fit: cover (render to PNG with headless Chrome at 1200x600).
 """
 import math
 import os
@@ -147,7 +149,28 @@ def build(palette):
             f'<title>Dactyloscopy</title>{mark}<g fill="{palette['text']}">{glyphs}</g></svg>\n')
 
 
+def build_card(width=1200, height=600, logo_share=0.62):
+    """Logo centered on white, for image boxes that crop with object-fit: cover.
+
+    btcpp.dev project cards show images at roughly 2.7:1 (grid) or squarer (winner card),
+    so the logo stays inside the middle ~62% of the width and well inside the height.
+    """
+    logo = build(LIGHT)
+    vb = logo.split('viewBox="', 1)[1].split('"', 1)[0]
+    _, _, vw, vh = (float(n) for n in vb.split())
+    w = width * logo_share
+    h = w * vh / vw
+    x, y = (width - w) / 2, (height - h) / 2
+    inner = logo.split(">", 1)[1].rsplit("</svg>", 1)[0]      # drop the outer <svg ...> wrapper
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">'
+            f'<rect width="{width}" height="{height}" fill="#FFFFFF"/>'
+            f'<svg x="{x:.2f}" y="{y:.2f}" width="{w:.2f}" height="{h:.2f}" viewBox="{vb}">{inner}</svg></svg>\n')
+
+
 if __name__ == "__main__":
+    card = os.path.join(HERE, "dactyloscopy-card.svg")
+    open(card, "w").write(build_card())
+    print("wrote", card)
     for name, palette in (("dactyloscopy-logo.svg", LIGHT), ("dactyloscopy-logo-dark.svg", DARK)):
         path = os.path.join(HERE, name)
         open(path, "w").write(build(palette))
