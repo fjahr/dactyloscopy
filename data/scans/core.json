@@ -1,0 +1,134 @@
+[
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 36040,
+    "url": "https://github.com/bitcoin/bitcoin/pull/36040",
+    "title": "Wallet: Don't backdate locktime rbf",
+    "state": "open",
+    "date": "2026-08-20",
+    "traits": [
+      {
+        "key": "nlocktime",
+        "before": "anti-fee-sniping (±100 blocks); a bumpfee replacement can get a lower nLockTime than the tx it replaces",
+        "after": "anti-fee-sniping (±100 blocks); a bumpfee replacement's nLockTime is never below the original's",
+        "evidence": "src/wallet/spend.cpp DiscourageFeeSniping: `if (rng_fast.randrange(10) == 0 && tx.nLockTime > minimum_height) { int range = std::min(100, int(block_height - minimum_height + 1)); ...}`; src/wallet/feebumper.cpp: `new_coin_control.m_minimum_locktime = tx->nLockTime;`"
+      }
+    ],
+    "summary": "Fee-bump replacements made by bumpfee no longer get an nLockTime lower than the transaction they replace, which the PR author measured as a rare (<2% of replacements) on-chain pattern that singles out Bitcoin Core and Electrum.",
+    "confidence": "high",
+    "notes": "Affects the bumpfee path only (CreateRateBumpTransaction). Normal sends are unchanged. If the chain is lagging, the locktime becomes the original's locktime instead of 0. Closes issue #26526."
+  },
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 35433,
+    "url": "https://github.com/bitcoin/bitcoin/pull/35433",
+    "title": "wallet: deprecate replaceable argument from transaction (and psbt) creation (and modification) RPCs",
+    "state": "open",
+    "date": "2026-06-01",
+    "traits": [
+      {
+        "key": "nsequence",
+        "before": "0xFFFFFFFD (RBF); per-transaction replaceable=false gives 0xFFFFFFFE",
+        "after": "0xFFFFFFFD (RBF); per-transaction opt-out needs -deprecatedrpc=bip125 (the -walletrbf=0 startup option still works)",
+        "evidence": "src/wallet/rpc/spend.cpp sendtoaddress/sendmany/FundTransaction/sendall/bumpfee: `if (!pwallet->chain().rpcEnableDeprecated(\"bip125\")) throw JSONRPCError(RPC_METHOD_DEPRECATED, \"Deprecated \\\"replaceable\\\" argument passed...\")`"
+      }
+    ],
+    "summary": "Users can no longer opt individual transactions out of RBF signalling, so fewer Core transactions should carry nSequence 0xFFFFFFFE.",
+    "confidence": "low",
+    "notes": "The default is unchanged. This only removes a per-tx option, so the effect is limited to users who used replaceable=false. A sibling PR that flipped the -walletrbf default to false (#35405, giving 0xFFFFFFFE by default) was closed after mailing-list feedback preferred keeping MAX-2. Draft #35442 still carries that stale commit; it was excluded because its own commits are test-only."
+  },
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 34405,
+    "url": "https://github.com/bitcoin/bitcoin/pull/34405",
+    "title": "wallet: skip APS when no partial spend exists",
+    "state": "open",
+    "date": "2026-01-26",
+    "traits": [
+      {
+        "key": "new:avoid_partial_spends",
+        "before": "second coin-selection pass grouped by address always runs; its input set is used whenever its fee is <= the normal selection's (default -maxapsfee=0)",
+        "after": "the grouped pass runs only if the normal selection spends some but not all UTXOs of an address; otherwise the normal selection's inputs are kept",
+        "evidence": "src/wallet/spend.cpp CreateTransaction: `... && !coin_control.m_avoid_partial_spends && txr_ungrouped.has_partial_spend)`; master use_aps check at spend.cpp:1486 `txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee`"
+      }
+    ],
+    "summary": "When the normal coin selection leaves no address partially spent, the wallet keeps that input set instead of sometimes switching to the address-grouped selection, which can change how many and which inputs a transaction has.",
+    "confidence": "low",
+    "notes": "Default send path. The on-chain effect is indirect (input count/selection) and probably small; the PR mainly fixes over-reporting of APS use (issue #25150)."
+  },
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 32857,
+    "url": "https://github.com/bitcoin/bitcoin/pull/32857",
+    "title": "wallet: allow skipping script paths",
+    "state": "open",
+    "date": "2025-07-02",
+    "traits": [
+      {
+        "key": "new:taproot_spend_path",
+        "before": "signs and finalizes taproot script paths too; falls back to a script-path spend when no key-path signature is available",
+        "after": "opt-in keypath_only: no script-path signatures are added and the PSBT is not finalized without a key-path signature, so the tx only ever appears on chain as a key-path spend",
+        "evidence": "src/script/sign.cpp SignTaproot: `if (taproot_keypath_only) spenddata.scripts.clear();` ... `// Key path signing failed. In keypath-only mode, stop here ... if (taproot_keypath_only) return false;`"
+      }
+    ],
+    "summary": "Adds an option so taproot wallets with script-path fallbacks (e.g. MuSig2 2-of-2 with a timelocked backup) never broadcast a script-path spend by accident, keeping the spend a 64-byte key-path signature on chain.",
+    "confidence": "medium",
+    "notes": "Opt-in: keypath_only option (default false) on send, sendall, walletcreatefundedpsbt, walletprocesspsbt and descriptorprocesspsbt. Only matters for taproot descriptors that have script leaves."
+  },
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 35302,
+    "url": "https://github.com/bitcoin/bitcoin/pull/35302",
+    "title": "Silent Payments:  Sending (take 2)",
+    "state": "open",
+    "date": "2026-05-16",
+    "traits": [
+      {
+        "key": "new:silent_payments_send",
+        "before": "cannot pay BIP352 silent payment (sp1...) addresses",
+        "after": "pays sp addresses with a P2TR output derived from the input keys (BIP352)",
+        "evidence": "src/wallet/spend.cpp: CreateSilentPaymentsOutputs -> bip352::GenerateSilentPaymentsTaprootDestinations(silent_payments_destinations, plain_keys, taproot_keys, smallest_outpoint)"
+      },
+      {
+        "key": "new:sp_input_constraints",
+        "before": "coin selection picks any spendable inputs",
+        "after": "for sp sends: at least one BIP352-eligible input (P2WPKH, P2TR key-path, P2SH-P2WPKH, compressed P2PKH) is forced into the selection, preferring confirmed coins; inputs of unknown witness version and external inputs are refused",
+        "evidence": "src/wallet/spend.cpp SelectCoinsForSilentPayments: `// Otherwise, preset an eligible coin (the anchor) and select again. Confirmed coins are tried first`; CheckSilentPaymentsInput: `... has an unknown witness version and cannot be used in a silent payments transaction`"
+      }
+    ],
+    "summary": "Lets the wallet send to silent payment addresses, creating BIP352-derived P2TR outputs and shaping the input set so that at least one eligible input is present.",
+    "confidence": "medium",
+    "notes": "Opt-in: only when a recipient is an sp address. Also blocks sp sends that could not be fee-bumped safely (PSBT creation, add_to_wallet=false). Depends on #35301 (marked done in the PR body). Change type follows the existing 'matches payment' logic (recipient is P2TR)."
+  },
+  {
+    "wallet": "Bitcoin Core",
+    "repo": "bitcoin/bitcoin",
+    "pr": 32966,
+    "url": "https://github.com/bitcoin/bitcoin/pull/32966",
+    "title": "Silent Payments: Receiving",
+    "state": "open",
+    "date": "2025-07-14",
+    "traits": [
+      {
+        "key": "change_type",
+        "before": "matches payment",
+        "after": "when paying an sp address from an sp wallet, change goes to a BIP352-derived silent-payment change output (P2TR)",
+        "evidence": "src/wallet/spend.cpp: `if (change_sp) { // Generate output for change too  sp_dests[sp_change_index] = *change_sp; }` and change prototype `GetScriptForDestination(WitnessV1Taproot())`"
+      },
+      {
+        "key": "new:silent_payments_receive",
+        "before": "cannot receive or spend silent payment outputs",
+        "after": "sp descriptor wallets scan for and spend BIP352 outputs (P2TR key path with tweaked keys)",
+        "evidence": "adds SilentPaymentsDescriptorScriptPubKeyMan (src/wallet/scriptpubkeyman.cpp) and an sp() descriptor (src/script/descriptor.cpp)"
+      }
+    ],
+    "summary": "Adds silent-payment receiving wallets, whose spends are P2TR key-path inputs and whose change on sp sends is itself a silent-payment P2TR output.",
+    "confidence": "low",
+    "notes": "Draft. Depends on #35301 and #35302; the diff is built against older sending code, so details may change. Opt-in: needs an sp descriptor wallet. The change output stays P2TR like the payment, so the observable change type barely moves."
+  }
+]

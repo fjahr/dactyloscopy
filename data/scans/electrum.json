@@ -1,0 +1,116 @@
+[
+  {
+    "wallet": "Electrum",
+    "repo": "spesmilo/electrum",
+    "pr": 9269,
+    "url": "https://github.com/spesmilo/electrum/pull/9269",
+    "title": "Make it possible to turn off automatic txout ordering",
+    "state": "open",
+    "date": "2024-10-21",
+    "traits": [
+      {"key": "new:output_ordering",
+       "before": "BIP-69",
+       "after": "BIP-69 by default; opt-out keeps recipient-entered output order",
+       "evidence": "simple_config.py: WALLET_SORT_TX_OUTPUTS = ConfigVar('sort_tx_outputs', default=True, ...); wallet.py: PartialTransaction.from_io(list(coins), list(outputs), BIP69_sort = self.config.WALLET_SORT_TX_OUTPUTS)"},
+      {"key": "input_ordering",
+       "before": "BIP-69",
+       "after": "BIP-69 by default; opt-out leaves inputs in wallet coin order",
+       "evidence": "same from_io(..., BIP69_sort=...) call: BIP69_sort toggles sorting of both inputs and outputs"}
+    ],
+    "summary": "Adds a Qt tx-editor toggle that turns off BIP-69 sorting, so a user-built send-max transaction keeps its outputs (and inputs) in the order given instead of lexicographic order.",
+    "confidence": "medium",
+    "notes": "Opt-in; default stays BIP-69. As written, the patch only touches the 'spend max' branch of make_unsigned_transaction (coinchooser-built txs with change stay BIP-69 sorted). Stale since 2024: it targets old code and would need rebasing. The config text has a TODO to switch to randomized ordering later."
+  },
+  {
+    "wallet": "Electrum",
+    "repo": "spesmilo/electrum",
+    "pr": 10756,
+    "url": "https://github.com/spesmilo/electrum/pull/10756",
+    "title": "Taproot swaps",
+    "state": "open",
+    "date": "2026-07-16",
+    "traits": [
+      {"key": "new:swap_lockup_output_type",
+       "before": "P2WSH HTLC",
+       "after": "P2TR (two-leaf tapscript: claim/refund) when the swap server advertises taproot-v1; P2WSH fallback",
+       "evidence": "submarine_swaps.py: lockup_address = ... if protocol == TAPROOT_SWAP_PROTOCOL else script_to_p2wsh(redeem_script); use_taproot = TAPROOT_SWAP_PROTOCOL in transport.protocols"},
+      {"key": "input_type",
+       "before": "P2WSH (swap HTLC script-path, ECDSA)",
+       "after": "P2TR script-path (claim/refund) or P2TR key-path MuSig2 (cooperative)",
+       "evidence": "add_txin_info: txin.tap_script_signing_data = TapScriptSigningData(script=..., control_block=...); sig_dummy = bytes(64)"},
+      {"key": "sighash",
+       "before": "N/A (ECDSA)",
+       "after": "64-byte DEFAULT",
+       "evidence": "transaction.py: sighash = txin.sighash if txin.sighash is not None else Sighash.DEFAULT; cooperative: tx.serialize_preimage(0, sighash=Sighash.DEFAULT)"},
+      {"key": "nlocktime",
+       "before": "anti-fee-sniping (±100 blocks)",
+       "after": "0 (never set)",
+       "evidence": "cooperative claim: PartialTransaction.from_io([txin], [txout], locktime=0, version=2, BIP69_sort=False); validator requires network_tx.locktime == 0"},
+      {"key": "new:swap_claim_tx_shape",
+       "before": "built by txbatcher (may be batched with other sweeps/payments, wallet change output)",
+       "after": "cooperative claim/refund: standalone 1-input 1-output tx, nSequence 0xFFFFFFFD (script-path fallback still goes through txbatcher)",
+       "evidence": "validator: len(inputs) != 1 or len(outputs) != 1 -> 'cooperative transaction shape is not canonical'; tests assert txbatcher.add_sweep_input.assert_not_called() for cooperative path"}
+    ],
+    "summary": "Swap lockup outputs become P2TR instead of P2WSH, and swap claims/refunds become taproot spends (64-byte SIGHASH_DEFAULT sigs); cooperative MuSig2 claims are single-input single-output txs with nLockTime 0.",
+    "confidence": "medium",
+    "notes": "Swap path only (submarine swaps, client and swapserver plugin). Draft PR. Taproot is used automatically when the server offers 'taproot-v1', and the cooperative key-path spend when it offers 'taproot-cooperative-v1'. The nlocktime 'before' refers to reverse-swap claims built by txbatcher with locktime=None; forward-swap refunds keep using the swap CLTV height. Needs an unreleased electrum-ecc with MuSig2. I read only the claim/refund construction and negotiation parts of this ~4900-line diff."
+  },
+  {
+    "wallet": "Electrum",
+    "repo": "spesmilo/electrum",
+    "pr": 10650,
+    "url": "https://github.com/spesmilo/electrum/pull/10650",
+    "title": "submarine_swaps: Reintroduce support for the old submarine swap protocol",
+    "state": "open",
+    "date": "2026-05-15",
+    "traits": [
+      {"key": "new:swap_htlc_script",
+       "before": "one unified witness script for all swaps (reverse-swap template)",
+       "after": "adds the v1 forward-swap witness script (HASH160 preimage / CLTV refund template) for swaps made with v1 clients",
+       "evidence": "submarine_swaps.py: _construct_swap_scriptcode_v1(... values={1: ripemd(payment_hash), 4: server_pubkey, 6: locktime, 9: client_pubkey}); 'capabilities': [ CAP_FORWARD_V1 ]"}
+    ],
+    "summary": "When Electrum runs as a swap server, it accepts old-flow (v1) forward swaps, so its claim transactions spend P2WSH outputs with a different HTLC witness script.",
+    "confidence": "low",
+    "notes": "Swapserver plugin path only (opt-in). The external v1 client funds the lockup output; Electrum's claim tx reveals the v1 script in its witness. Input type stays P2WSH; only the script template differs."
+  },
+  {
+    "wallet": "Electrum",
+    "repo": "spesmilo/electrum",
+    "pr": 11007,
+    "url": "https://github.com/spesmilo/electrum/pull/11007",
+    "title": "commands: accept script(...) outputs in payto/paytomany, like the GUI",
+    "state": "open",
+    "date": "2026-09-29",
+    "traits": [
+      {"key": "op_return",
+       "before": "yes (GUI payee field only, via script(...))",
+       "after": "yes (GUI and CLI/RPC payto/paytomany)",
+       "evidence": "commands.py + payment_identifier.py: shared parse_script(); e.g. `electrum payto \"script(OP_RETURN 48656c6c6f)\" 0`"}
+    ],
+    "summary": "CLI/RPC payto and paytomany can now create transactions with arbitrary script outputs such as OP_RETURN, which before was possible only from the GUI.",
+    "confidence": "medium",
+    "notes": "Opt-in (user must specify the script output). Default transactions do not change; the effect is that OP_RETURN outputs become easy for RPC/scripted users and merchants."
+  },
+  {
+    "wallet": "Electrum",
+    "repo": "spesmilo/electrum",
+    "pr": 6804,
+    "url": "https://github.com/spesmilo/electrum/pull/6804",
+    "title": "WIP: payjoin as sender",
+    "state": "open",
+    "date": "2020-12-02",
+    "traits": [
+      {"key": "new:payjoin_sender",
+       "before": "no BIP78 support",
+       "after": "BIP78 sender: when paying a pj= URI, broadcasts the receiver's proposal with extra receiver input(s) and adjusted change",
+       "evidence": "transaction.py: class PayjoinTransaction ... query_string += '&additionalfeeoutputindex=' ...; validate_payjoin_proposal() checks version/locktime/nsequence unchanged"},
+      {"key": "input_ordering",
+       "before": "BIP-69",
+       "after": "receiver-chosen order for payjoin txs (the proposal is not re-sorted)",
+       "evidence": "validate_payjoin_proposal: '#TODO: check if the order of inputs is important'; no BIP69_sort applied to the proposal"}
+    ],
+    "summary": "Paying a BIP78 payjoin invoice would put a two-party transaction on chain containing the receiver's input(s), in the receiver's input order, instead of an Electrum-only BIP-69 transaction.",
+    "confidence": "low",
+    "notes": "Draft since 2020; it targets the old Kivy/Qt code and is effectively dormant, so it is unlikely to merge as-is. It applies only when the URI has pj=. The validator requires one uniform nSequence and one uniform input script type, so single_type is preserved. nVersion, nLockTime and the sender's nSequence must stay unchanged."
+  }
+]

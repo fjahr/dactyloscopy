@@ -1,0 +1,1366 @@
+{
+ "entries": [
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 3790,
+   "url": "https://github.com/cake-tech/cake_wallet/pull/3790",
+   "title": "Cw 1678 disable address types other than segwit and taproot by default",
+   "state": "open",
+   "date": "2026-10-30",
+   "traits": [
+    {
+     "key": "input_type",
+     "before": "mixed (P2WPKH/P2TR/P2SH/…)",
+     "after": "P2WPKH/P2TR by default (P2PKH, P2SH-P2WPKH, P2WSH opt-in)",
+     "evidence": "cw_bitcoin/lib/electrum_wallet_addresses.dart: new OPTIONAL_BITCOIN_ADDRESS_TYPES = [p2pkh, p2wsh, p2wpkhInP2sh] + isAddressTypeEnabledFor(); electrum_wallet.dart: disabled types skip derivation, subscription, history fetch and unspent updates (activeAddresses)",
+     "others_before": 3,
+     "others_after": 3,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Bitcoin wallets stop deriving and tracking P2PKH, P2SH-P2WPKH and P2WSH addresses unless the user enables them, so by default sends spend only P2WPKH/P2TR inputs.",
+   "confidence": "medium",
+   "notes": "New Addresses settings screen re-enables the legacy types (not on hardware wallets). The UTXO effect is indirect: disabled types are not subscribed, so their coins are not loaded for spending. Mixing P2WPKH with P2TR stays possible, so single_type is still 'no'. I did not verify how existing wallets with legacy-type funds are migrated.",
+   "direction": "neutral",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 3758,
+   "url": "https://github.com/cake-tech/cake_wallet/pull/3758",
+   "title": "Custom block explorers",
+   "state": "open",
+   "date": "2026-10-24",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "mempool.cakewallet.com",
+     "after": "mempool.cakewallet.com (default) or user-configured mempool instance",
+     "evidence": "cw_bitcoin/lib/electrum_wallet.dart updateFeeRates(): hard-coded https://mempool.cakewallet.com/api/v1/fees/recommended -> fetchMempoolApi('/api/v1/fees/recommended') using the CustomBlockExplorers.mempoolApiPrefsKey pref; cw_core/lib/custom_block_explorers.dart mempoolApiUris() never falls back to Cake's server when a custom base is set",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Users can point fee estimation at their own mempool.space instance, so the fee rate Cake picks may come from a different estimator.",
+   "confidence": "medium",
+   "notes": "Opt-in (custom block explorer setting). Defaults are unchanged.",
+   "direction": "neutral",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 1183,
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/1183",
+   "title": "Cap fee rate estimates at a maximum",
+   "state": "open",
+   "date": "2026-10-20",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "backend-dependent (floored at 253 sat/kwu, no cap)",
+     "after": "backend-dependent, clamped to at most 2,000 sat/vB (500,000 sat/kwu)",
+     "evidence": "src/fee_estimator.rs: `.clamp(FEERATE_FLOOR_SATS_PER_KW as u64, MAX_FEERATE_SATS_PER_KW)` with `MAX_FEERATE_SATS_PER_KW: u64 = 2_000 * 250`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Caps the estimated feerate for on-chain sends, funding, sweeps and anchor bumps at 2,000 sat/vB.",
+   "confidence": "low",
+   "notes": "Only triggers when the chain source reports more than 2,000 sat/vB (faulty or malicious server). User-supplied feerates are not capped. In practice the effect on chain is negligible.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 605,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/605",
+   "title": "Fix/build fee bump multi transaction",
+   "state": "open",
+   "date": "2026-10-19",
+   "traits": [
+    {
+     "key": "rbf_replacement",
+     "before": "separate builder (one original tx per replacement)",
+     "after": "separate builder; one replacement can merge inputs and recipients of several unconfirmed txs (batched RBF), with fee floor = sum of original fees",
+     "evidence": "src/wallet/mod.rs: `build_fee_bump(txids: impl IntoIterator<Item = Txid>)` accumulates inputs and non-change outputs of all txids; new BIP125 rule-3 check `total_fee <= previous_fee.absolute` -> FeeTooLow",
+     "others_before": 1,
+     "others_after": 1,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Adds the option to replace several unconfirmed wallet transactions with one combined higher-fee transaction.",
+   "confidence": "medium",
+   "notes": "Opt-in (pass more than one txid); a single txid behaves as before except for the added absolute-fee floor check. The merged replacement has more outputs than any original, which is a new tx shape.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 599,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/599",
+   "title": "fix(wallet): avoid reissuing change address after reload",
+   "state": "open",
+   "date": "2026-10-13",
+   "traits": [
+    {
+     "key": "new:change_address_reuse",
+     "before": "change goes to the first revealed-but-unused internal address, so after a wallet reload the change address of a not-yet-synced tx can be handed out again (two txs paying change to one address)",
+     "after": "change always goes to a freshly revealed internal index; no change-address reuse",
+     "evidence": "src/wallet/mod.rs create_tx: `unused_keychain_spks(change_keychain).next()` replaced by `next_index(change_keychain)` + `peek_address`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Stops two transactions from paying change to the same internal address after a wallet reload, at the cost of gaps in the change derivation path.",
+   "confidence": "medium",
+   "notes": "Default path. The reuse only happened when a tx was built, the wallet reloaded before the tx was seen by sync, and another tx was built. Change script type is unchanged.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "payjoin-cli",
+   "repo": "payjoin/rust-payjoin",
+   "pr": 1966,
+   "url": "https://github.com/payjoin/rust-payjoin/pull/1966",
+   "title": "Payjoin-cli: add `--cut-through` mode",
+   "state": "open",
+   "date": "2026-10-10",
+   "traits": [
+    {
+     "key": "num_outputs",
+     "before": "single recipient",
+     "after": "multi-recipient (adds a forwarded third-party output with --cut-through)",
+     "evidence": "payjoin-cli/src/app/v2/mod.rs commit_outputs: `proposal.replace_receiver_outputs(vec![receiver_output.clone(), forward], &drain_script)`",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "uih2_avoidance",
+     "before": "yes",
+     "after": "no (with --cut-through: value-driven selection, try_preserving_privacy skipped)",
+     "evidence": "payjoin-cli: `let inputs = if consolidate.is_some() || min_total > Amount::ZERO { wallet.select_receiver_utxos(consolidate, min_total)? ... }`",
+     "others_before": 5,
+     "others_after": 1,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "new:receiver_input_selection",
+     "before": "one input via try_preserving_privacy",
+     "after": "smallest UTXOs for consolidation, then largest-first top-up until the forwarded amount is covered",
+     "evidence": "payjoin-cli/src/app/wallet.rs select_receiver_utxos: `while total < min_total { // Sorted ascending, so popping takes the largest remaining.`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "With the new opt-in --cut-through flag, the payjoin-cli receiver adds a third-party payment output to the payjoin and funds it with its own largest UTXOs.",
+   "confidence": "medium",
+   "notes": "Opt-in flag, receiver-only path, draft. Stacked on #1878, so the diff includes --consolidate. On v1 with --cut-through, the receiver keeps its original output instead of substituting a fresh address (substitute_receiver_script is skipped). The author lists open TODOs, such as dropping FEE_HEADROOM_VB, so details may change.",
+   "direction": "mixed",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 11007,
+   "url": "https://github.com/spesmilo/electrum/pull/11007",
+   "title": "commands: accept script(...) outputs in payto/paytomany, like the GUI",
+   "state": "open",
+   "date": "2026-09-29",
+   "traits": [
+    {
+     "key": "op_return",
+     "before": "yes (GUI payee field only, via script(...))",
+     "after": "yes (GUI and CLI/RPC payto/paytomany)",
+     "evidence": "commands.py + payment_identifier.py: shared parse_script(); e.g. `electrum payto \"script(OP_RETURN 48656c6c6f)\" 0`",
+     "others_before": 2,
+     "others_after": 2,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "CLI/RPC payto and paytomany can now create transactions with arbitrary script outputs such as OP_RETURN, which before was possible only from the GUI.",
+   "confidence": "medium",
+   "notes": "Opt-in (user must specify the script output). Default transactions do not change; the effect is that OP_RETURN outputs become easy for RPC/scripted users and merchants.",
+   "direction": "neutral",
+   "source_file": "electrum.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 575,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/575",
+   "title": "fix(wallet): filter uneconomical inputs from BnB fallback",
+   "state": "open",
+   "date": "2026-09-27",
+   "traits": [
+    {
+     "key": "new:coin_selection_uneconomical_inputs",
+     "before": "default BnB falls back to SingleRandomDraw over all optional UTXOs, so it can add inputs worth less than their spending fee",
+     "after": "fallback only sees positive-effective-value UTXOs; uneconomical (dust-ish) inputs are never auto-selected",
+     "evidence": "src/wallet/coin_selection.rs BranchAndBoundCoinSelection::coin_select: `.filter(|u| u.effective_value.is_positive())` now also feeds `optional_utxos` passed to fallback_algorithm",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Transactions from the default coin selector stop including inputs whose spending fee is at least their value when branch-and-bound falls back to random draw.",
+   "confidence": "high",
+   "notes": "Default path (DefaultCoinSelectionAlgorithm = BnB<SingleRandomDraw>), so ldk-node inherits it once released and bumped. Brings BDK closer to Bitcoin Core, which drops negative-effective-value coins.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "payjoin-cli",
+   "repo": "payjoin/rust-payjoin",
+   "pr": 1878,
+   "url": "https://github.com/payjoin/rust-payjoin/pull/1878",
+   "title": "Payjoin-cli : add `--consolidate` mode",
+   "state": "open",
+   "date": "2026-09-14",
+   "traits": [
+    {
+     "key": "uih2_avoidance",
+     "before": "yes",
+     "after": "no (with --consolidate: try_preserving_privacy is skipped)",
+     "evidence": "payjoin-cli/src/app/v2/mod.rs & v1.rs: `let inputs = if consolidate.is_some() { wallet.select_receiver_utxos(consolidate)? ... } else { vec![proposal.try_preserving_privacy(candidate_inputs)?] }`",
+     "others_before": 5,
+     "others_after": 1,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "utxo_order",
+     "before": "deterministic",
+     "after": "deterministic (smallest amount first)",
+     "evidence": "payjoin-cli/src/app/wallet.rs select_receiver_utxos: `unspent.sort_by_key(|utxo| Amount::from_btc(...)); unspent.drain(..smallest)`",
+     "others_before": 5,
+     "others_after": 5,
+     "direction": "neutral",
+     "known_trait": true
+    },
+    {
+     "key": "new:receiver_input_count",
+     "before": "1",
+     "after": "up to N smallest UTXOs (default 10)",
+     "evidence": "payjoin-cli/src/cli/mod.rs: `#[arg(long = \"consolidate\", num_args = 0..=1, default_missing_value = \"10\")]`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "With the new opt-in --consolidate flag, the payjoin-cli receiver adds its N smallest UTXOs to the payjoin instead of one privacy-preserving input.",
+   "confidence": "high",
+   "notes": "Opt-in flag, receiver-only path, v1 and v2. Not a draft. The default path (one input via try_preserving_privacy) is unchanged. The PR says the input cap exists because of the BIP77 7088-byte proposal limit.",
+   "direction": "diverging",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2811,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2811",
+   "title": "feat(bullvault): add descriptor wallet and vault workflows",
+   "state": "open",
+   "date": "2026-09-09",
+   "traits": [
+    {
+     "key": "input_type",
+     "before": "P2WPKH",
+     "after": "P2WPKH, plus P2WSH/P2TR miniscript inputs from BullVault/descriptor wallets",
+     "evidence": "lib/core/wallet/data/datasources/bdk_wallet_datasource.dart: buildPsbt gains `BitcoinPolicyPath? policyPath` -> `txBuilder.policyPath(...)` for external/internal descriptors; `isTaproot: parsedDescriptor.externalDescriptor.startsWith('tr(')`",
+     "others_before": 2,
+     "others_after": 2,
+     "direction": "neutral",
+     "known_trait": true
+    },
+    {
+     "key": "nsequence",
+     "before": "0xFFFFFFFF (MAX)",
+     "after": "CSV relative-timelock value on vault recovery-path spends",
+     "evidence": "bdk_wallet_datasource.dart: `if (!replaceByFee && policyPath?.requiresRelativeTimelock != true)` keeps setExactSequence off so BDK sets the CSV sequence for timelocked paths",
+     "others_before": 1,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    }
+   ],
+   "summary": "Adds BullVault/descriptor wallets that spend miniscript P2WSH/P2TR outputs (multisig, timelocked recovery and inheritance paths), which are new input script types for Bull.",
+   "confidence": "medium",
+   "notes": "Opt-in (new BullVault/descriptor-import feature). Very large PR (300+ files); I read only the BDK datasource patch via the files API. Open PRs #2824 and #2832 appear to bundle the same commits. Note: current develop's comment says bdk_dart defaults to nSequence 0xFFFFFFFD, which conflicts with the catalog's MAX for Bull. I kept the catalog value as 'before'.",
+   "direction": "diverging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 541,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/541",
+   "title": "feat(wallet): add TxBuilder::avoid_reuse to skip reused-address UTXOs",
+   "state": "open",
+   "date": "2026-09-02",
+   "traits": [
+    {
+     "key": "new:avoid_reuse",
+     "before": "coin selection spends UTXOs on addresses the wallet already spent from (forced-address-reuse dust can be merged)",
+     "after": "opt-in TxBuilder::avoid_reuse() skips UTXOs on already-spent-from addresses (Bitcoin Core avoid_reuse semantics)",
+     "evidence": "src/wallet/tx_builder.rs: new `pub fn avoid_reuse(&mut self)` inserting outpoints whose (keychain, index) is in `spent_from` into `params.unspendable`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds an option to keep coins sitting on already-spent-from addresses out of new transactions, resisting forced address reuse.",
+   "confidence": "high",
+   "notes": "Opt-in builder flag; default coin selection is unchanged.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2756,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2756",
+   "title": "feat(send): support multiple bitcoin recipients",
+   "state": "open",
+   "date": "2026-08-28",
+   "traits": [
+    {
+     "key": "num_outputs",
+     "before": "single recipient",
+     "after": "multi-recipient",
+     "evidence": "lib/core/wallet/data/datasources/bdk_wallet_datasource.dart buildPsbt: `required String address, int? amountSat` -> `required List<BitcoinTransactionRecipientModel> recipients`, looping `txBuilder.addRecipient(...)` per recipient (one optional drainTo remainder recipient)",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "On-chain sends could pay several recipients in one transaction (batched outputs plus change), where before Bull always paid a single recipient.",
+   "confidence": "high",
+   "notes": "Opt-in (user adds recipients; the single-recipient flow is unchanged). Payjoin is disabled for multi-recipient transactions. Stacked PR: it depends on #2745 (UTXO sweep), which I excluded because it reuses the existing manual-selection/drain path.",
+   "direction": "converging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2712,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2712",
+   "title": "feat(payjoin): independent Receive / Trade / Send payjoin settings",
+   "state": "open",
+   "date": "2026-08-23",
+   "traits": [
+    {
+     "key": "new:payjoin_default",
+     "before": "payjoin off by default (global setting, disclaimer-gated)",
+     "after": "payjoin on by default for Bull exchange buy/sell/bill-pay orders",
+     "evidence": "packages/bull_payjoin (Drift schema v2): `BoolColumn get tradingEnabled => boolean().withDefault(const Constant(true))()`; PR body: 'Even with global payjoin off (the default), buy/sell/pay orders use payjoin out of the box.'",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Exchange-trade payments to and from Bull Bitcoin would default to payjoin transactions (both sides contribute inputs) instead of plain sends.",
+   "confidence": "medium",
+   "notes": "Affects only exchange-trade flows (Bull is the counterparty). Wallet-to-wallet payjoin stays off by default. Users can turn it off with the new 'Payjoin trading enabled' toggle.",
+   "direction": "neutral",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2703,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2703",
+   "title": "fix(send): harden fee loading and transaction construction",
+   "state": "open",
+   "date": "2026-08-21",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "mempool.bullbitcoin.com",
+     "after": "mempool.bullbitcoin.com (embedded-Tor retry); cached or fixed fallback when unreachable",
+     "evidence": "lib/core/fees/data/fees_repository_impl.dart: _fetchBitcoinNetworkFees() adds external-proxy / embedded-Tor routes; lib/features/send/domain/usecases/load_send_fees_usecase.dart: on failure uses previousBitcoinFees ?? _buildFallbackBitcoinFees()",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    },
+    {
+     "key": "round_feerate",
+     "before": "round only if custom",
+     "after": "round only if custom, or 1 sat/vB when fee APIs fail",
+     "evidence": "load_send_fees_usecase.dart _buildFallbackBitcoinFees(): fastest/economic/slow = NetworkFee.relativeFromSatPerVbyte(1)",
+     "others_before": 2,
+     "others_after": 2,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "When no fee estimate can be fetched, sends would fall back to the last fetched rates or a flat 1 sat/vB, where before the send failed.",
+   "confidence": "low",
+   "notes": "Edge case only (all fee paths down). The UI shows a warning and the user can still set a custom fee.",
+   "direction": "neutral",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 36040,
+   "url": "https://github.com/bitcoin/bitcoin/pull/36040",
+   "title": "Wallet: Don't backdate locktime rbf",
+   "state": "open",
+   "date": "2026-08-20",
+   "traits": [
+    {
+     "key": "nlocktime",
+     "before": "anti-fee-sniping (±100 blocks); a bumpfee replacement can get a lower nLockTime than the tx it replaces",
+     "after": "anti-fee-sniping (±100 blocks); a bumpfee replacement's nLockTime is never below the original's",
+     "evidence": "src/wallet/spend.cpp DiscourageFeeSniping: `if (rng_fast.randrange(10) == 0 && tx.nLockTime > minimum_height) { int range = std::min(100, int(block_height - minimum_height + 1)); ...}`; src/wallet/feebumper.cpp: `new_coin_control.m_minimum_locktime = tx->nLockTime;`",
+     "others_before": 1,
+     "others_after": 1,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Fee-bump replacements made by bumpfee no longer get an nLockTime lower than the transaction they replace, which the PR author measured as a rare (<2% of replacements) on-chain pattern that singles out Bitcoin Core and Electrum.",
+   "confidence": "high",
+   "notes": "Affects the bumpfee path only (CreateRateBumpTransaction). Normal sends are unchanged. If the chain is lagging, the locktime becomes the original's locktime instead of 0. Closes issue #26526.",
+   "direction": "neutral",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 1042,
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/1042",
+   "title": "Fall back to per-target defaults for missing fee estimates",
+   "state": "open",
+   "date": "2026-08-11",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "backend-dependent (missing/invalid estimate for a target cached as 1 sat/vB)",
+     "after": "backend-dependent (missing/invalid estimate falls back to per-target static default on mainnet, e.g. 5000 sat/kwu = 20 sat/vB for on-chain payments, 1000 sat/kwu = 4 sat/vB for channel funding)",
+     "evidence": "src/fee_estimator.rs: `get_fallback_fee_rate_for_network` -> `FeeRate::from_sat_per_kwu(get_fallback_rate_for_target(target))` off regtest/signet; src/chain/electrum.rs no longer `.map_or(0.00001, ...)`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "When the chain backend has no estimate for a target, on-chain sends use a fixed per-target default (20 sat/vB for payments) instead of 1 sat/vB.",
+   "confidence": "medium",
+   "notes": "Only when the backend omits a target or returns -1 (seen with Electrum, also sparse Esplora maps). Both the old and new fallbacks are round values; the new ones are higher and differ by target.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 3417,
+   "url": "https://github.com/cake-tech/cake_wallet/pull/3417",
+   "title": "fix silent OP_RETURN writting on bip-21 opening",
+   "state": "open",
+   "date": "2026-07-18",
+   "traits": [
+    {
+     "key": "op_return",
+     "before": "yes",
+     "after": "yes (only from an explicit memo; no longer auto-filled from BIP-21 message)",
+     "evidence": "lib/new-ui/pages/send_page.dart: `_memoControllers[0].text = ...note` -> `_applyPaymentRequestNote(note, i)`, which writes to the memo (-> OP_RETURN) only when sendViewModel.hasMemos, otherwise to a local note",
+     "others_before": 2,
+     "others_after": 6,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "Opening a BIP-21 URI or QR code would stop silently adding the payee's `message` text as an OP_RETURN output on Bitcoin sends.",
+   "confidence": "medium",
+   "notes": "New-UI send page only. The author says it is untested ('vibe coded, as a courtesy'). OP_RETURN still appears for memos set elsewhere (e.g. swap memos), so the catalog value stays 'yes' but these outputs become rarer.",
+   "direction": "converging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 10756,
+   "url": "https://github.com/spesmilo/electrum/pull/10756",
+   "title": "Taproot swaps",
+   "state": "open",
+   "date": "2026-07-16",
+   "traits": [
+    {
+     "key": "new:swap_lockup_output_type",
+     "before": "P2WSH HTLC",
+     "after": "P2TR (two-leaf tapscript: claim/refund) when the swap server advertises taproot-v1; P2WSH fallback",
+     "evidence": "submarine_swaps.py: lockup_address = ... if protocol == TAPROOT_SWAP_PROTOCOL else script_to_p2wsh(redeem_script); use_taproot = TAPROOT_SWAP_PROTOCOL in transport.protocols",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "input_type",
+     "before": "P2WSH (swap HTLC script-path, ECDSA)",
+     "after": "P2TR script-path (claim/refund) or P2TR key-path MuSig2 (cooperative)",
+     "evidence": "add_txin_info: txin.tap_script_signing_data = TapScriptSigningData(script=..., control_block=...); sig_dummy = bytes(64)",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    },
+    {
+     "key": "sighash",
+     "before": "N/A (ECDSA)",
+     "after": "64-byte DEFAULT",
+     "evidence": "transaction.py: sighash = txin.sighash if txin.sighash is not None else Sighash.DEFAULT; cooperative: tx.serialize_preimage(0, sighash=Sighash.DEFAULT)",
+     "others_before": 3,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "nlocktime",
+     "before": "anti-fee-sniping (±100 blocks)",
+     "after": "0 (never set)",
+     "evidence": "cooperative claim: PartialTransaction.from_io([txin], [txout], locktime=0, version=2, BIP69_sort=False); validator requires network_tx.locktime == 0",
+     "others_before": 1,
+     "others_after": 1,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "new:swap_claim_tx_shape",
+     "before": "built by txbatcher (may be batched with other sweeps/payments, wallet change output)",
+     "after": "cooperative claim/refund: standalone 1-input 1-output tx, nSequence 0xFFFFFFFD (script-path fallback still goes through txbatcher)",
+     "evidence": "validator: len(inputs) != 1 or len(outputs) != 1 -> 'cooperative transaction shape is not canonical'; tests assert txbatcher.add_sweep_input.assert_not_called() for cooperative path",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Swap lockup outputs become P2TR instead of P2WSH, and swap claims/refunds become taproot spends (64-byte SIGHASH_DEFAULT sigs); cooperative MuSig2 claims are single-input single-output txs with nLockTime 0.",
+   "confidence": "medium",
+   "notes": "Swap path only (submarine swaps, client and swapserver plugin). Draft PR. Taproot is used automatically when the server offers 'taproot-v1', and the cooperative key-path spend when it offers 'taproot-cooperative-v1'. The nlocktime 'before' refers to reverse-swap claims built by txbatcher with locktime=None; forward-swap refunds keep using the swap CLTV height. Needs an unreleased electrum-ecc with MuSig2. I read only the claim/refund construction and negotiation parts of this ~4900-line diff.",
+   "direction": "mixed",
+   "source_file": "electrum.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2441,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2441",
+   "title": "[privacy] Implement Joinstr coinjoin (proof of concept)",
+   "state": "open",
+   "date": "2026-07-12",
+   "traits": [
+    {
+     "key": "sighash_nonall",
+     "before": "no",
+     "after": "SIGHASH_ALL|ANYONECANPAY in Joinstr coinjoins",
+     "evidence": "lib/features/joinstr/data/joinstr_datasource.dart (comment): 'we broadcast a SIGHASH_ALL|SIGHASH_ANYONECANPAY signature over the coin'",
+     "others_before": 7,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "new:coinjoin",
+     "before": "none",
+     "after": "Joinstr equal-denomination coinjoin (one input per peer)",
+     "evidence": "lib/features/joinstr/domain/joinstr.dart: denominationSat pools, isEligibleCoin(denomination+500 <= value <= denomination+5000); uses joinstr_flutter bindings",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds a Joinstr coinjoin flow: one input per peer with ANYONECANPAY signatures, paying equal-denomination outputs.",
+   "confidence": "low",
+   "notes": "Draft proof of concept behind superuser settings, testnet only, hot BIP84 wallets only, so there is no mainnet effect yet. Tx construction happens in the external rust-joinstr/joinstr_flutter bindings.",
+   "direction": "diverging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bull Bitcoin",
+   "repo": "SatoshiPortal/bullbitcoin-mobile",
+   "pr": 2431,
+   "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2431",
+   "title": "payjoin: exclude 0-conf inputs from receiver candidates",
+   "state": "open",
+   "date": "2026-07-09",
+   "traits": [
+    {
+     "key": "unconfirmed",
+     "before": "yes",
+     "after": "no",
+     "evidence": "lib/core/payjoin/data/repository/payjoin_repository_impl.dart: candidate filter adds `.where((u) => u.confirmations > 0)`",
+     "others_before": 4,
+     "others_after": 4,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "As a payjoin receiver, Bull would stop contributing unconfirmed UTXOs to the payjoin transaction.",
+   "confidence": "high",
+   "notes": "Payjoin receiver path only; normal sends are unaffected. Cake merged the equivalent change (cake_wallet #3389). Ref: payjoin/rust-payjoin#1597.",
+   "direction": "neutral",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Liana",
+   "repo": "wizardsardine/liana",
+   "pr": 2192,
+   "url": "https://github.com/wizardsardine/liana/pull/2192",
+   "title": "spend: deterministic, canonical input construction",
+   "state": "open",
+   "date": "2026-07-09",
+   "traits": [
+    {
+     "key": "input_ordering",
+     "before": "selection order",
+     "after": "sorted by outpoint (txid, vout)",
+     "evidence": "liana/src/spend.rs select_coins_for_spend: `let mut v = candidate_coins.to_vec(); v.sort_unstable_by_key(|c| c.outpoint);`. Inputs are pushed in selector.selected_indices() order (BTreeSet = candidate index order), so input order becomes outpoint order.",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    },
+    {
+     "key": "new:coin_selection_tiebreak",
+     "before": "random per run (candidates come from a HashMap)",
+     "after": "deterministic (candidates sorted by outpoint)",
+     "evidence": "PR body: 'candidates come from a HashMap, so tie-breaking (and input order) was random per run, sort by outpoint.'",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Liana's spend and recovery transactions would order inputs by outpoint and pick coins deterministically, where today input order and tie-breaking follow random HashMap iteration.",
+   "confidence": "medium",
+   "notes": "Written by bc1cindy as a follow-up to rust-payjoin#1597. rust-bitcoin's OutPoint ordering compares the txid's internal byte order, not the reversed display order BIP-69 uses, so this is outpoint-sorted but not strictly BIP-69. It also adds a coin_to_psbt_input helper, which leaves nSequence (0xFFFFFFFD) unchanged.",
+   "direction": "neutral",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 1430,
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/1430",
+   "title": "Payjoin integration",
+   "state": "open",
+   "date": "2026-06-04",
+   "traits": [
+    {
+     "key": "uih2_avoidance",
+     "before": "N/A",
+     "after": "no",
+     "evidence": "boltzr/src/payjoin/mod.rs select_contribution_input: `candidates.sort_by_key(|(amount, _)| *amount); for (_, input) in candidates { if receiver.clone().contribute_inputs(vec![input.clone()]).is_ok() { return Ok(input); } }`. try_preserving_privacy is never called.",
+     "others_before": 2,
+     "others_after": 1,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "utxo_order",
+     "before": "N/A",
+     "after": "deterministic",
+     "evidence": "boltzr/src/payjoin/mod.rs: wallet listunspent sorted ascending by amount, first fit wins",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "unconfirmed",
+     "before": "N/A",
+     "after": "no",
+     "evidence": "boltzr/src/payjoin/mod.rs: `btc_chain.list_unspent(None)` -> chain_client.rs `request_wallet(..., \"listunspent\", None)` (Core default minconf=1)",
+     "others_before": 0,
+     "others_after": 3,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "new:lockup_output_value",
+     "before": "lockup output = expected swap amount",
+     "after": "lockup output = swap amount + contributed Boltz UTXO (oversized consolidation lockup)",
+     "evidence": "commit_outputs() without output substitution; contribute_inputs adds the input to the drain (lockup) output. The PR body says it allows 'the intentional oversized consolidation lockup'.",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "On BTC->LN submarine swaps, Boltz would act as a payjoin receiver, adding its smallest UTXO that fits to the user's lockup transaction and folding that value into the swap lockup output.",
+   "confidence": "medium",
+   "notes": "Draft, receiver-only path, lockup txs of BTC->LN submarine swaps only. The PR revives #892. Contributed inputs are signed by Core walletprocesspsbt, and the input type comes from the UTXO's address (P2WPKH/P2TR/other), not matched to the sender. The catalog's Boltz 'uih2_avoidance: yes' seems to come from an earlier revision (f3c117a) that used try_preserving_privacy. The current head (7a315f04) uses smallest-first first-fit.",
+   "direction": "mixed",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/bitcoin_base",
+   "pr": 12,
+   "url": "https://github.com/cake-tech/bitcoin_base/pull/12",
+   "title": "Fix RBF nsequence: canonical value, all inputs",
+   "state": "open",
+   "date": "2026-06-02",
+   "traits": [
+    {
+     "key": "nsequence",
+     "before": "[0x01, 0xFFFFFFD]",
+     "after": "0xFFFFFFFD (RBF)",
+     "evidence": "lib/src/bitcoin/script/op_code/constant.dart: replaceByFeeSequence [0x01,0x00,0x00,0x00] -> [0xfd,0xff,0xff,0xff]; transaction_builder.dart + forked_transaction_builder.dart: `if (enableRBF && inputs.isNotEmpty) inputs[0] = ...` -> loop sets RBF sequence on every input",
+     "others_before": 0,
+     "others_after": 6,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "RBF-signalling sends would set nSequence 0xFFFFFFFD on every input, replacing 0x01 on input 0 only (which also imposed a 1-block BIP-68 relative timelock).",
+   "confidence": "medium",
+   "notes": "Library PR in Cake's fork. It targets the fork's `main` branch, but Cake pins branch `cake-update-v11` (commit 4e41f96f), which still has the old code, so the change reaches Cake only once ported to that branch and the pin is bumped. Upstream mrtnetwork/bitcoin_base merged the same change as #21 (2026-07-11). Cake's PSBT/hardware path was already switched to 0xFFFFFFFD by merged cake_wallet #3077. Cake software sends set enableRBF = !spendsUnconfirmedTX.",
+   "direction": "converging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 35433,
+   "url": "https://github.com/bitcoin/bitcoin/pull/35433",
+   "title": "wallet: deprecate replaceable argument from transaction (and psbt) creation (and modification) RPCs",
+   "state": "open",
+   "date": "2026-06-01",
+   "traits": [
+    {
+     "key": "nsequence",
+     "before": "0xFFFFFFFD (RBF); per-transaction replaceable=false gives 0xFFFFFFFE",
+     "after": "0xFFFFFFFD (RBF); per-transaction opt-out needs -deprecatedrpc=bip125 (the -walletrbf=0 startup option still works)",
+     "evidence": "src/wallet/rpc/spend.cpp sendtoaddress/sendmany/FundTransaction/sendall/bumpfee: `if (!pwallet->chain().rpcEnableDeprecated(\"bip125\")) throw JSONRPCError(RPC_METHOD_DEPRECATED, \"Deprecated \\\"replaceable\\\" argument passed...\")`",
+     "others_before": 5,
+     "others_after": 5,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Users can no longer opt individual transactions out of RBF signalling, so fewer Core transactions should carry nSequence 0xFFFFFFFE.",
+   "confidence": "low",
+   "notes": "The default is unchanged. This only removes a per-tx option, so the effect is limited to users who used replaceable=false. A sibling PR that flipped the -walletrbf default to false (#35405, giving 0xFFFFFFFE by default) was closed after mailing-list feedback preferred keeping MAX-2. Draft #35442 still carries that stale commit; it was excluded because its own commits are test-only.",
+   "direction": "neutral",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 35302,
+   "url": "https://github.com/bitcoin/bitcoin/pull/35302",
+   "title": "Silent Payments:  Sending (take 2)",
+   "state": "open",
+   "date": "2026-05-16",
+   "traits": [
+    {
+     "key": "new:silent_payments_send",
+     "before": "cannot pay BIP352 silent payment (sp1...) addresses",
+     "after": "pays sp addresses with a P2TR output derived from the input keys (BIP352)",
+     "evidence": "src/wallet/spend.cpp: CreateSilentPaymentsOutputs -> bip352::GenerateSilentPaymentsTaprootDestinations(silent_payments_destinations, plain_keys, taproot_keys, smallest_outpoint)",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "new:sp_input_constraints",
+     "before": "coin selection picks any spendable inputs",
+     "after": "for sp sends: at least one BIP352-eligible input (P2WPKH, P2TR key-path, P2SH-P2WPKH, compressed P2PKH) is forced into the selection, preferring confirmed coins; inputs of unknown witness version and external inputs are refused",
+     "evidence": "src/wallet/spend.cpp SelectCoinsForSilentPayments: `// Otherwise, preset an eligible coin (the anchor) and select again. Confirmed coins are tried first`; CheckSilentPaymentsInput: `... has an unknown witness version and cannot be used in a silent payments transaction`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Lets the wallet send to silent payment addresses, creating BIP352-derived P2TR outputs and shaping the input set so that at least one eligible input is present.",
+   "confidence": "medium",
+   "notes": "Opt-in: only when a recipient is an sp address. Also blocks sp sends that could not be fee-bumped safely (PSBT creation, add_to_wallet=false). Depends on #35301 (marked done in the PR body). Change type follows the existing 'matches payment' logic (recipient is P2TR).",
+   "direction": "neutral",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 10650,
+   "url": "https://github.com/spesmilo/electrum/pull/10650",
+   "title": "submarine_swaps: Reintroduce support for the old submarine swap protocol",
+   "state": "open",
+   "date": "2026-05-15",
+   "traits": [
+    {
+     "key": "new:swap_htlc_script",
+     "before": "one unified witness script for all swaps (reverse-swap template)",
+     "after": "adds the v1 forward-swap witness script (HASH160 preimage / CLTV refund template) for swaps made with v1 clients",
+     "evidence": "submarine_swaps.py: _construct_swap_scriptcode_v1(... values={1: ripemd(payment_hash), 4: server_pubkey, 6: locktime, 9: client_pubkey}); 'capabilities': [ CAP_FORWARD_V1 ]",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "When Electrum runs as a swap server, it accepts old-flow (v1) forward swaps, so its claim transactions spend P2WSH outputs with a different HTLC witness script.",
+   "confidence": "low",
+   "notes": "Swapserver plugin path only (opt-in). The external v1 client funds the lockup output; Electrum's claim tx reveals the v1 script in its witness. Input type stays P2WSH; only the script template differs.",
+   "direction": "neutral",
+   "source_file": "electrum.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 430,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/430",
+   "title": "fix(wallet): allow fee bump without opt-in RBF signaling",
+   "state": "open",
+   "date": "2026-04-03",
+   "traits": [
+    {
+     "key": "rbf_replacement",
+     "before": "separate builder (build_fee_bump refuses txs without BIP125 signaling: IrreplaceableTransaction)",
+     "after": "separate builder; also replaces txs that did not signal RBF (relies on full-RBF); wallet inputs in the replacement get 0xFFFFFFFD",
+     "evidence": "src/wallet/mod.rs build_fee_bump: removed `if !tx.input.iter().any(|txin| txin.sequence.to_consensus_u32() <= 0xFFFFFFFD) { return Err(IrreplaceableTransaction) }`",
+     "others_before": 1,
+     "others_after": 1,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Lets the wallet fee-bump transactions that did not signal RBF, producing full-RBF replacements.",
+   "confidence": "medium",
+   "notes": "Only matters for txs created with a non-RBF nSequence (RBF is on by default since bdk 1.0) or by another wallet on the same descriptor. Replacement inputs pick up the default 0xFFFFFFFD, so the nSequence differs from the original's.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Liana",
+   "repo": "wizardsardine/liana",
+   "pr": 2079,
+   "url": "https://github.com/wizardsardine/liana/pull/2079",
+   "title": "gui: add \"Sweep individually\" option for self-transfer",
+   "state": "open",
+   "date": "2026-04-03",
+   "traits": [
+    {
+     "key": "new:self_transfer_shape",
+     "before": "one consolidating tx (all selected coins -> 1 output)",
+     "after": "one 1-input/1-output tx per coin (opt-in)",
+     "evidence": "liana-gui/src/app/state/spend/step.rs: `for (outpoint, feerate) in coin_feerates { daemon.create_spend_tx(&[outpoint], &HashMap::new(), feerate, None) }`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "new:feerate_variation",
+     "before": "one user-entered feerate",
+     "after": "per-tx random integer sat/vB in a user-set min/max range (opt-in)",
+     "evidence": "step.rs SweepRandomizeFees: `let feerate = min + (rand_val as u64 % range);` using liana::random::random_bytes()",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "An opt-in GUI mode turns a multi-coin self-transfer into one single-input, single-output transaction per coin, each at a randomized whole-number feerate.",
+   "confidence": "medium",
+   "notes": "Opt-in and GUI-only: the PR states 'No backend changes', so lianad's create_spend is unchanged. Feerates stay whole sat/vB numbers, so the round-feerate tell remains.",
+   "direction": "neutral",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 427,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/427",
+   "title": "feat(wallet): add configurable min_output_value filter",
+   "state": "open",
+   "date": "2026-04-01",
+   "traits": [
+    {
+     "key": "new:min_output_value_filter",
+     "before": "any UTXO, however small, can be auto-selected",
+     "after": "opt-in wallet-level min_output_value: UTXOs below the threshold are hidden from balance/list_unspent and never auto-selected",
+     "evidence": "src/wallet/mod.rs: `.filter(|(_, txo)| self.min_output_value.is_none_or(|threshold| txo.txout.value >= threshold))` in coin-selection candidates; params.rs `min_output_value: Option<Amount>`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds an option to keep dust and spam outputs below a chosen value out of the inputs of new transactions.",
+   "confidence": "medium",
+   "notes": "Opt-in via CreateParams/LoadParams::min_output_value or Wallet::set_min_output_value; default None.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 828,
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/828",
+   "title": "Add chain syncing via compact block filters (BIP 157)",
+   "state": "open",
+   "date": "2026-03-15",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "backend-dependent",
+     "after": "backend-dependent; new CBF (kyoto) backend estimates from recent blocks' coinbase-derived average feerate, at a per-target percentile (90th for <=2 blocks, 75th for 3-6, 50th for 7-12, ...)",
+     "evidence": "src/util.rs: `coinbase_fee_rate` = (coinbase revenue - subsidy) / block weight; `cbf_percentile_for_target`; src/chain/cbf.rs FeeSource::Cbf",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Adds a compact-block-filter chain source whose feerates come from recent blocks' average fees rather than a mempool estimator.",
+   "confidence": "medium",
+   "notes": "Opt-in chain source; the CBF backend can also take fees from Esplora/Electrum. Block-average feerates track mempool estimators poorly, so these nodes may pay noticeably different (often lower) feerates.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Liana",
+   "repo": "wizardsardine/liana",
+   "pr": 2011,
+   "url": "https://github.com/wizardsardine/liana/pull/2011",
+   "title": "[WIP] Payjoin receiver",
+   "state": "open",
+   "date": "2026-02-10",
+   "traits": [
+    {
+     "key": "uih2_avoidance",
+     "before": "N/A",
+     "after": "yes",
+     "evidence": "lianad/src/payjoin/receiver.rs contribute_inputs: `proposal.try_preserving_privacy(candidate_inputs.clone()).unwrap_or(candidate_inputs.next()...)`",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "utxo_order",
+     "before": "N/A",
+     "after": "non-deterministic",
+     "evidence": "lianad/src/payjoin/receiver.rs: candidates are built in `HashMap::<OutPoint, (Coin, TxIn, Input, Weight)>` and passed on as `candidate_inputs_map.values()`",
+     "others_before": 2,
+     "others_after": 6,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "unconfirmed",
+     "before": "N/A",
+     "after": "no",
+     "evidence": "lianad/src/payjoin/receiver.rs: `db_conn.coins(&[CoinStatus::Confirmed], &[])`",
+     "others_before": 0,
+     "others_after": 3,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "Liana gains a BIP77 payjoin receiver that adds one confirmed wallet coin to the sender's transaction, picked by try_preserving_privacy from a HashMap-ordered candidate list.",
+   "confidence": "medium",
+   "notes": "Receiver-only path. WIP, not draft. If try_preserving_privacy fails, it falls back to the first HashMap candidate, which can break UIH avoidance. Outputs are committed without substituting the receiver script. The contributed input's nSequence is ENABLE_RBF_NO_LOCKTIME, and the payjoin lib coerces it to the sender's value. The catalog's Liana uih2/utxo_order values appear to come from this PR. Supersedes the 'DO NOT MERGE' POC #1806, which is not listed.",
+   "direction": "converging",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 34405,
+   "url": "https://github.com/bitcoin/bitcoin/pull/34405",
+   "title": "wallet: skip APS when no partial spend exists",
+   "state": "open",
+   "date": "2026-01-26",
+   "traits": [
+    {
+     "key": "new:avoid_partial_spends",
+     "before": "second coin-selection pass grouped by address always runs; its input set is used whenever its fee is <= the normal selection's (default -maxapsfee=0)",
+     "after": "the grouped pass runs only if the normal selection spends some but not all UTXOs of an address; otherwise the normal selection's inputs are kept",
+     "evidence": "src/wallet/spend.cpp CreateTransaction: `... && !coin_control.m_avoid_partial_spends && txr_ungrouped.has_partial_spend)`; master use_aps check at spend.cpp:1486 `txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "When the normal coin selection leaves no address partially spent, the wallet keeps that input set instead of sometimes switching to the address-grouped selection, which can change how many and which inputs a transaction has.",
+   "confidence": "low",
+   "notes": "Default send path. The on-chain effect is indirect (input count/selection) and probably small; the PR mainly fixes over-reporting of APS use (issue #25150).",
+   "direction": "neutral",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "BDK",
+   "repo": "bitcoindevkit/bdk_wallet",
+   "pr": 370,
+   "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/370",
+   "title": "Add CPFP Support",
+   "state": "open",
+   "date": "2026-01-19",
+   "traits": [
+    {
+     "key": "new:cpfp_builder",
+     "before": "no CPFP API (apps hand-roll a child with TxBuilder)",
+     "after": "Wallet::create_sweep: child spends exactly one unconfirmed wallet output (manually_selected_only), single output to a caller-supplied descriptor, absolute fee sized for the parent+child package feerate",
+     "evidence": "src/wallet/mod.rs create_sweep_internal: `params.add_utxos(&[outpoint]).manually_selected_only().change_script(...).fee(FeeStrategy::AbsoluteFee(Amount::from_sat(child_fee)))`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds a CPFP API that builds a one-input, one-output child of an unconfirmed transaction, paying an absolute fee that lifts the package to the target feerate.",
+   "confidence": "medium",
+   "notes": "Opt-in API; built on the newer bdk-tx create_psbt path (merged as #516), so ordering/locktime/sequence defaults come from PsbtParams rather than the classic TxBuilder. Large PR, still being rebased.",
+   "direction": "neutral",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 746,
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/746",
+   "title": "Add Payjoin Receiver Support (BIP 77)",
+   "state": "open",
+   "date": "2026-01-08",
+   "traits": [
+    {
+     "key": "new:payjoin_receive",
+     "before": "no payjoin receiving",
+     "after": "BIP77 payjoin receiver: adds exactly one confirmed wallet input to the sender's tx",
+     "evidence": "src/payment/payjoin/manager.rs contribute_inputs: `proposal.try_preserving_privacy(candidate_inputs)` -> `.contribute_inputs(vec![selected_input])`; candidates from `list_unspent_confirmed_utxos()`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "uih2_avoidance",
+     "before": "N/A",
+     "after": "yes",
+     "evidence": "try_preserving_privacy (rust-payjoin UIH2 avoidance) picks the contributed input",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "utxo_order",
+     "before": "N/A",
+     "after": "deterministic",
+     "evidence": "list_input_pairs iterates wallet.list_unspent_confirmed_utxos() in wallet order, no shuffle",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "unconfirmed",
+     "before": "yes",
+     "after": "no (payjoin receiver contributes confirmed inputs only)",
+     "evidence": "list_input_pairs: `self.wallet.list_unspent_confirmed_utxos()`",
+     "others_before": 4,
+     "others_after": 4,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Lets ldk-node receive BIP77 payjoins, adding one confirmed UTXO chosen to avoid the UIH2 heuristic.",
+   "confidence": "medium",
+   "notes": "Opt-in (payjoin must be configured). The catalog already lists uih2_avoidance=yes / utxo_order=deterministic for ldk-node, probably taken from this PR or rust-payjoin defaults. Fee range uses apply_fee_range(None, None) (rust-payjoin defaults). The 'unconfirmed' change applies only to payjoin txs.",
+   "direction": "converging",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 1164,
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/1164",
+   "title": "feat: funding addresses",
+   "state": "open",
+   "date": "2025-12-19",
+   "traits": [
+    {
+     "key": "tx_version",
+     "before": "2",
+     "after": "3 (TRUC)",
+     "evidence": "boltz-core/src/bitcoin/tx.rs construct_raw: `-        version: Version::TWO,` / `+        // Use V3 transactions to enable zero-fee presigned funding-address transactions ... via TRUC relay.` / `+        version: Version(3),`",
+     "others_before": 7,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    }
+   ],
+   "summary": "Every Bitcoin claim and refund transaction built by Rust boltz-core's construct_raw would switch from nVersion 2 to nVersion 3 (TRUC), not only the new funding-address ones.",
+   "confidence": "medium",
+   "notes": "Claim/refund/sweep only. Affects txs built by boltz-core Rust (boltzr swap claims via swap/manager.rs, the refund bumper, and new funding-address claims). TypeScript-side claims through the boltz-core npm package (Claim.ts) are not touched. The Liquid/elements tx.rs keeps its version. The PR has merge conflicts (last updated 2026-03-24), so the exact scope may change on rebase.",
+   "direction": "diverging",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "ldk-node",
+   "repo": "lightningdevkit/ldk-node",
+   "pr": 638,
+   "url": "https://github.com/lightningdevkit/ldk-node/pull/638",
+   "title": "Implement CPFP fee bumping for unconfirmed transactions",
+   "state": "open",
+   "date": "2025-09-17",
+   "traits": [
+    {
+     "key": "change_matches_input",
+     "before": "no",
+     "after": "yes for CPFP children (single output pays back to the script of the output being spent)",
+     "evidence": "src/wallet/mod.rs bump_fee_cpfp: `tx_builder.add_utxo(cpfp_outpoint)?.drain_to(transaction.output[our_vout as usize].script_pubkey.clone())`",
+     "others_before": 8,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "new:cpfp_builder",
+     "before": "no CPFP (RBF bump only)",
+     "after": "bump_fee_cpfp: 1-in/1-out child of an unconfirmed tx at 1.5x the OnchainPayment estimate (child feerate only, not package-aware) unless the app passes fee_rate",
+     "evidence": "src/wallet/mod.rs: `const CPFP_MULTIPLIER: f64 = 1.5; ... FeeRate::from_sat_per_kwu((estimated_fee_rate.to_sat_per_kwu() as f64 * CPFP_MULTIPLIER) as u64)`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds CPFP bumping whose child transaction sends its single output back to the same address it spends from, at 1.5x the estimated feerate.",
+   "confidence": "high",
+   "notes": "Opt-in API (OnchainPayment::bump_fee_cpfp). The child spends the first wallet-owned output of the parent (often change). Other fields follow BDK TxBuilder defaults (RBF sequence, tip locktime, shuffle).",
+   "direction": "diverging",
+   "source_file": "bdk_ldk.json"
+  },
+  {
+   "wallet": "Cake Wallet",
+   "repo": "cake-tech/cake_wallet",
+   "pr": 2520,
+   "url": "https://github.com/cake-tech/cake_wallet/pull/2520",
+   "title": "Switch to cake.mempool.space",
+   "state": "open",
+   "date": "2025-09-11",
+   "traits": [
+    {
+     "key": "feerate_source",
+     "before": "mempool.cakewallet.com",
+     "after": "cake.mempool.space",
+     "evidence": "cw_bitcoin/lib/electrum_wallet.dart: Uri.parse('https://mempool.cakewallet.com/api/v1/fees/recommended') -> 'https://cake.mempool.space/api/v1/fees/recommended'",
+     "others_before": 0,
+     "others_after": 1,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "The default fee-rate source would move from Cake's mempool host to cake.mempool.space.",
+   "confidence": "low",
+   "notes": "Possibly a host migration with the same estimator, so the on-chain effect on fee rates may be nil. Open since 2025-09 and probably stale. Also changes the default Electrum node to cake.mempool.space:50002.",
+   "direction": "converging",
+   "source_file": "cake_bull.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 32966,
+   "url": "https://github.com/bitcoin/bitcoin/pull/32966",
+   "title": "Silent Payments: Receiving",
+   "state": "open",
+   "date": "2025-07-14",
+   "traits": [
+    {
+     "key": "change_type",
+     "before": "matches payment",
+     "after": "when paying an sp address from an sp wallet, change goes to a BIP352-derived silent-payment change output (P2TR)",
+     "evidence": "src/wallet/spend.cpp: `if (change_sp) { // Generate output for change too  sp_dests[sp_change_index] = *change_sp; }` and change prototype `GetScriptForDestination(WitnessV1Taproot())`",
+     "others_before": 2,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    },
+    {
+     "key": "new:silent_payments_receive",
+     "before": "cannot receive or spend silent payment outputs",
+     "after": "sp descriptor wallets scan for and spend BIP352 outputs (P2TR key path with tweaked keys)",
+     "evidence": "adds SilentPaymentsDescriptorScriptPubKeyMan (src/wallet/scriptpubkeyman.cpp) and an sp() descriptor (src/script/descriptor.cpp)",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds silent-payment receiving wallets, whose spends are P2TR key-path inputs and whose change on sp sends is itself a silent-payment P2TR output.",
+   "confidence": "low",
+   "notes": "Draft. Depends on #35301 and #35302; the diff is built against older sending code, so details may change. Opt-in: needs an sp descriptor wallet. The change output stays P2TR like the payment, so the observable change type barely moves.",
+   "direction": "diverging",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "Bitcoin Core",
+   "repo": "bitcoin/bitcoin",
+   "pr": 32857,
+   "url": "https://github.com/bitcoin/bitcoin/pull/32857",
+   "title": "wallet: allow skipping script paths",
+   "state": "open",
+   "date": "2025-07-02",
+   "traits": [
+    {
+     "key": "new:taproot_spend_path",
+     "before": "signs and finalizes taproot script paths too; falls back to a script-path spend when no key-path signature is available",
+     "after": "opt-in keypath_only: no script-path signatures are added and the PSBT is not finalized without a key-path signature, so the tx only ever appears on chain as a key-path spend",
+     "evidence": "src/script/sign.cpp SignTaproot: `if (taproot_keypath_only) spenddata.scripts.clear();` ... `// Key path signing failed. In keypath-only mode, stop here ... if (taproot_keypath_only) return false;`",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    }
+   ],
+   "summary": "Adds an option so taproot wallets with script-path fallbacks (e.g. MuSig2 2-of-2 with a timelocked backup) never broadcast a script-path spend by accident, keeping the spend a 64-byte key-path signature on chain.",
+   "confidence": "medium",
+   "notes": "Opt-in: keypath_only option (default false) on send, sendall, walletcreatefundedpsbt, walletprocesspsbt and descriptorprocesspsbt. Only matters for taproot descriptors that have script leaves.",
+   "direction": "neutral",
+   "source_file": "core.json"
+  },
+  {
+   "wallet": "Boltz",
+   "repo": "BoltzExchange/boltz-backend",
+   "pr": 892,
+   "url": "https://github.com/BoltzExchange/boltz-backend/pull/892",
+   "title": "[Draft] Payjoin Submarine Swap Consolidation",
+   "state": "open",
+   "date": "2025-04-09",
+   "traits": [
+    {
+     "key": "uih2_avoidance",
+     "before": "N/A",
+     "after": "yes",
+     "evidence": "boltzr payjoin try_contributing_inputs: `payjoin.try_preserving_privacy(candidate_inputs)` then `contribute_inputs(vec![selected_input])`",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    },
+    {
+     "key": "utxo_order",
+     "before": "N/A",
+     "after": "deterministic",
+     "evidence": "candidates = `client.list_unspent()` (Core listunspent order, no sort)",
+     "others_before": 2,
+     "others_after": 5,
+     "direction": "converging",
+     "known_trait": true
+    }
+   ],
+   "summary": "An older hackathon draft makes Boltz a payjoin receiver for submarine swap lockups, adding one treasury UTXO chosen by try_preserving_privacy.",
+   "confidence": "low",
+   "notes": "Draft by DanGould, receiver-only path. Stale (last updated 2025-06) and superseded by #1430, which switched to smallest-first selection. It targets an old rust-payjoin API.",
+   "direction": "converging",
+   "source_file": "liana_payjoin_boltz.json"
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 9269,
+   "url": "https://github.com/spesmilo/electrum/pull/9269",
+   "title": "Make it possible to turn off automatic txout ordering",
+   "state": "open",
+   "date": "2024-10-21",
+   "traits": [
+    {
+     "key": "new:output_ordering",
+     "before": "BIP-69",
+     "after": "BIP-69 by default; opt-out keeps recipient-entered output order",
+     "evidence": "simple_config.py: WALLET_SORT_TX_OUTPUTS = ConfigVar('sort_tx_outputs', default=True, ...); wallet.py: PartialTransaction.from_io(list(coins), list(outputs), BIP69_sort = self.config.WALLET_SORT_TX_OUTPUTS)",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "input_ordering",
+     "before": "BIP-69",
+     "after": "BIP-69 by default; opt-out leaves inputs in wallet coin order",
+     "evidence": "same from_io(..., BIP69_sort=...) call: BIP69_sort toggles sorting of both inputs and outputs",
+     "others_before": 2,
+     "others_after": 2,
+     "direction": "neutral",
+     "known_trait": true
+    }
+   ],
+   "summary": "Adds a Qt tx-editor toggle that turns off BIP-69 sorting, so a user-built send-max transaction keeps its outputs (and inputs) in the order given instead of lexicographic order.",
+   "confidence": "medium",
+   "notes": "Opt-in; default stays BIP-69. As written, the patch only touches the 'spend max' branch of make_unsigned_transaction (coinchooser-built txs with change stay BIP-69 sorted). Stale since 2024: it targets old code and would need rebasing. The config text has a TODO to switch to randomized ordering later.",
+   "direction": "neutral",
+   "source_file": "electrum.json"
+  },
+  {
+   "wallet": "Electrum",
+   "repo": "spesmilo/electrum",
+   "pr": 6804,
+   "url": "https://github.com/spesmilo/electrum/pull/6804",
+   "title": "WIP: payjoin as sender",
+   "state": "open",
+   "date": "2020-12-02",
+   "traits": [
+    {
+     "key": "new:payjoin_sender",
+     "before": "no BIP78 support",
+     "after": "BIP78 sender: when paying a pj= URI, broadcasts the receiver's proposal with extra receiver input(s) and adjusted change",
+     "evidence": "transaction.py: class PayjoinTransaction ... query_string += '&additionalfeeoutputindex=' ...; validate_payjoin_proposal() checks version/locktime/nsequence unchanged",
+     "others_before": 0,
+     "others_after": 0,
+     "direction": "neutral",
+     "known_trait": false
+    },
+    {
+     "key": "input_ordering",
+     "before": "BIP-69",
+     "after": "receiver-chosen order for payjoin txs (the proposal is not re-sorted)",
+     "evidence": "validate_payjoin_proposal: '#TODO: check if the order of inputs is important'; no BIP69_sort applied to the proposal",
+     "others_before": 2,
+     "others_after": 0,
+     "direction": "diverging",
+     "known_trait": true
+    }
+   ],
+   "summary": "Paying a BIP78 payjoin invoice would put a two-party transaction on chain containing the receiver's input(s), in the receiver's input order, instead of an Electrum-only BIP-69 transaction.",
+   "confidence": "low",
+   "notes": "Draft since 2020; it targets the old Kivy/Qt code and is effectively dormant, so it is unlikely to merge as-is. It applies only when the URI has pj=. The validator requires one uniform nSequence and one uniform input script type, so single_type is preserved. nVersion, nLockTime and the sender's nSequence must stay unchanged.",
+   "direction": "diverging",
+   "source_file": "electrum.json"
+  }
+ ]
+}

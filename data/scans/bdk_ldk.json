@@ -1,0 +1,266 @@
+[
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 575,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/575",
+    "title": "fix(wallet): filter uneconomical inputs from BnB fallback",
+    "state": "open",
+    "date": "2026-09-27",
+    "traits": [
+      {
+        "key": "new:coin_selection_uneconomical_inputs",
+        "before": "default BnB falls back to SingleRandomDraw over all optional UTXOs, so it can add inputs worth less than their spending fee",
+        "after": "fallback only sees positive-effective-value UTXOs; uneconomical (dust-ish) inputs are never auto-selected",
+        "evidence": "src/wallet/coin_selection.rs BranchAndBoundCoinSelection::coin_select: `.filter(|u| u.effective_value.is_positive())` now also feeds `optional_utxos` passed to fallback_algorithm"
+      }
+    ],
+    "summary": "Transactions from the default coin selector stop including inputs whose spending fee is at least their value when branch-and-bound falls back to random draw.",
+    "confidence": "high",
+    "notes": "Default path (DefaultCoinSelectionAlgorithm = BnB<SingleRandomDraw>), so ldk-node inherits it once released and bumped. Brings BDK closer to Bitcoin Core, which drops negative-effective-value coins."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 599,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/599",
+    "title": "fix(wallet): avoid reissuing change address after reload",
+    "state": "open",
+    "date": "2026-10-13",
+    "traits": [
+      {
+        "key": "new:change_address_reuse",
+        "before": "change goes to the first revealed-but-unused internal address, so after a wallet reload the change address of a not-yet-synced tx can be handed out again (two txs paying change to one address)",
+        "after": "change always goes to a freshly revealed internal index; no change-address reuse",
+        "evidence": "src/wallet/mod.rs create_tx: `unused_keychain_spks(change_keychain).next()` replaced by `next_index(change_keychain)` + `peek_address`"
+      }
+    ],
+    "summary": "Stops two transactions from paying change to the same internal address after a wallet reload, at the cost of gaps in the change derivation path.",
+    "confidence": "medium",
+    "notes": "Default path. The reuse only happened when a tx was built, the wallet reloaded before the tx was seen by sync, and another tx was built. Change script type is unchanged."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 430,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/430",
+    "title": "fix(wallet): allow fee bump without opt-in RBF signaling",
+    "state": "open",
+    "date": "2026-04-03",
+    "traits": [
+      {
+        "key": "rbf_replacement",
+        "before": "separate builder (build_fee_bump refuses txs without BIP125 signaling: IrreplaceableTransaction)",
+        "after": "separate builder; also replaces txs that did not signal RBF (relies on full-RBF); wallet inputs in the replacement get 0xFFFFFFFD",
+        "evidence": "src/wallet/mod.rs build_fee_bump: removed `if !tx.input.iter().any(|txin| txin.sequence.to_consensus_u32() <= 0xFFFFFFFD) { return Err(IrreplaceableTransaction) }`"
+      }
+    ],
+    "summary": "Lets the wallet fee-bump transactions that did not signal RBF, producing full-RBF replacements.",
+    "confidence": "medium",
+    "notes": "Only matters for txs created with a non-RBF nSequence (RBF is on by default since bdk 1.0) or by another wallet on the same descriptor. Replacement inputs pick up the default 0xFFFFFFFD, so the nSequence differs from the original's."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 605,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/605",
+    "title": "Fix/build fee bump multi transaction",
+    "state": "open",
+    "date": "2026-10-19",
+    "traits": [
+      {
+        "key": "rbf_replacement",
+        "before": "separate builder (one original tx per replacement)",
+        "after": "separate builder; one replacement can merge inputs and recipients of several unconfirmed txs (batched RBF), with fee floor = sum of original fees",
+        "evidence": "src/wallet/mod.rs: `build_fee_bump(txids: impl IntoIterator<Item = Txid>)` accumulates inputs and non-change outputs of all txids; new BIP125 rule-3 check `total_fee <= previous_fee.absolute` -> FeeTooLow"
+      }
+    ],
+    "summary": "Adds the option to replace several unconfirmed wallet transactions with one combined higher-fee transaction.",
+    "confidence": "medium",
+    "notes": "Opt-in (pass more than one txid); a single txid behaves as before except for the added absolute-fee floor check. The merged replacement has more outputs than any original, which is a new tx shape."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 541,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/541",
+    "title": "feat(wallet): add TxBuilder::avoid_reuse to skip reused-address UTXOs",
+    "state": "open",
+    "date": "2026-09-02",
+    "traits": [
+      {
+        "key": "new:avoid_reuse",
+        "before": "coin selection spends UTXOs on addresses the wallet already spent from (forced-address-reuse dust can be merged)",
+        "after": "opt-in TxBuilder::avoid_reuse() skips UTXOs on already-spent-from addresses (Bitcoin Core avoid_reuse semantics)",
+        "evidence": "src/wallet/tx_builder.rs: new `pub fn avoid_reuse(&mut self)` inserting outpoints whose (keychain, index) is in `spent_from` into `params.unspendable`"
+      }
+    ],
+    "summary": "Adds an option to keep coins sitting on already-spent-from addresses out of new transactions, resisting forced address reuse.",
+    "confidence": "high",
+    "notes": "Opt-in builder flag; default coin selection is unchanged."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 427,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/427",
+    "title": "feat(wallet): add configurable min_output_value filter",
+    "state": "open",
+    "date": "2026-04-01",
+    "traits": [
+      {
+        "key": "new:min_output_value_filter",
+        "before": "any UTXO, however small, can be auto-selected",
+        "after": "opt-in wallet-level min_output_value: UTXOs below the threshold are hidden from balance/list_unspent and never auto-selected",
+        "evidence": "src/wallet/mod.rs: `.filter(|(_, txo)| self.min_output_value.is_none_or(|threshold| txo.txout.value >= threshold))` in coin-selection candidates; params.rs `min_output_value: Option<Amount>`"
+      }
+    ],
+    "summary": "Adds an option to keep dust and spam outputs below a chosen value out of the inputs of new transactions.",
+    "confidence": "medium",
+    "notes": "Opt-in via CreateParams/LoadParams::min_output_value or Wallet::set_min_output_value; default None."
+  },
+  {
+    "wallet": "BDK",
+    "repo": "bitcoindevkit/bdk_wallet",
+    "pr": 370,
+    "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/370",
+    "title": "Add CPFP Support",
+    "state": "open",
+    "date": "2026-01-19",
+    "traits": [
+      {
+        "key": "new:cpfp_builder",
+        "before": "no CPFP API (apps hand-roll a child with TxBuilder)",
+        "after": "Wallet::create_sweep: child spends exactly one unconfirmed wallet output (manually_selected_only), single output to a caller-supplied descriptor, absolute fee sized for the parent+child package feerate",
+        "evidence": "src/wallet/mod.rs create_sweep_internal: `params.add_utxos(&[outpoint]).manually_selected_only().change_script(...).fee(FeeStrategy::AbsoluteFee(Amount::from_sat(child_fee)))`"
+      }
+    ],
+    "summary": "Adds a CPFP API that builds a one-input, one-output child of an unconfirmed transaction, paying an absolute fee that lifts the package to the target feerate.",
+    "confidence": "medium",
+    "notes": "Opt-in API; built on the newer bdk-tx create_psbt path (merged as #516), so ordering/locktime/sequence defaults come from PsbtParams rather than the classic TxBuilder. Large PR, still being rebased."
+  },
+  {
+    "wallet": "ldk-node",
+    "repo": "lightningdevkit/ldk-node",
+    "pr": 638,
+    "url": "https://github.com/lightningdevkit/ldk-node/pull/638",
+    "title": "Implement CPFP fee bumping for unconfirmed transactions",
+    "state": "open",
+    "date": "2025-09-17",
+    "traits": [
+      {
+        "key": "change_matches_input",
+        "before": "no",
+        "after": "yes for CPFP children (single output pays back to the script of the output being spent)",
+        "evidence": "src/wallet/mod.rs bump_fee_cpfp: `tx_builder.add_utxo(cpfp_outpoint)?.drain_to(transaction.output[our_vout as usize].script_pubkey.clone())`"
+      },
+      {
+        "key": "new:cpfp_builder",
+        "before": "no CPFP (RBF bump only)",
+        "after": "bump_fee_cpfp: 1-in/1-out child of an unconfirmed tx at 1.5x the OnchainPayment estimate (child feerate only, not package-aware) unless the app passes fee_rate",
+        "evidence": "src/wallet/mod.rs: `const CPFP_MULTIPLIER: f64 = 1.5; ... FeeRate::from_sat_per_kwu((estimated_fee_rate.to_sat_per_kwu() as f64 * CPFP_MULTIPLIER) as u64)`"
+      }
+    ],
+    "summary": "Adds CPFP bumping whose child transaction sends its single output back to the same address it spends from, at 1.5x the estimated feerate.",
+    "confidence": "high",
+    "notes": "Opt-in API (OnchainPayment::bump_fee_cpfp). The child spends the first wallet-owned output of the parent (often change). Other fields follow BDK TxBuilder defaults (RBF sequence, tip locktime, shuffle)."
+  },
+  {
+    "wallet": "ldk-node",
+    "repo": "lightningdevkit/ldk-node",
+    "pr": 746,
+    "url": "https://github.com/lightningdevkit/ldk-node/pull/746",
+    "title": "Add Payjoin Receiver Support (BIP 77)",
+    "state": "open",
+    "date": "2026-01-08",
+    "traits": [
+      {
+        "key": "new:payjoin_receive",
+        "before": "no payjoin receiving",
+        "after": "BIP77 payjoin receiver: adds exactly one confirmed wallet input to the sender's tx",
+        "evidence": "src/payment/payjoin/manager.rs contribute_inputs: `proposal.try_preserving_privacy(candidate_inputs)` -> `.contribute_inputs(vec![selected_input])`; candidates from `list_unspent_confirmed_utxos()`"
+      },
+      {
+        "key": "uih2_avoidance",
+        "before": "N/A",
+        "after": "yes",
+        "evidence": "try_preserving_privacy (rust-payjoin UIH2 avoidance) picks the contributed input"
+      },
+      {
+        "key": "utxo_order",
+        "before": "N/A",
+        "after": "deterministic",
+        "evidence": "list_input_pairs iterates wallet.list_unspent_confirmed_utxos() in wallet order, no shuffle"
+      },
+      {
+        "key": "unconfirmed",
+        "before": "yes",
+        "after": "no (payjoin receiver contributes confirmed inputs only)",
+        "evidence": "list_input_pairs: `self.wallet.list_unspent_confirmed_utxos()`"
+      }
+    ],
+    "summary": "Lets ldk-node receive BIP77 payjoins, adding one confirmed UTXO chosen to avoid the UIH2 heuristic.",
+    "confidence": "medium",
+    "notes": "Opt-in (payjoin must be configured). The catalog already lists uih2_avoidance=yes / utxo_order=deterministic for ldk-node, probably taken from this PR or rust-payjoin defaults. Fee range uses apply_fee_range(None, None) (rust-payjoin defaults). The 'unconfirmed' change applies only to payjoin txs."
+  },
+  {
+    "wallet": "ldk-node",
+    "repo": "lightningdevkit/ldk-node",
+    "pr": 828,
+    "url": "https://github.com/lightningdevkit/ldk-node/pull/828",
+    "title": "Add chain syncing via compact block filters (BIP 157)",
+    "state": "open",
+    "date": "2026-03-15",
+    "traits": [
+      {
+        "key": "feerate_source",
+        "before": "backend-dependent",
+        "after": "backend-dependent; new CBF (kyoto) backend estimates from recent blocks' coinbase-derived average feerate, at a per-target percentile (90th for <=2 blocks, 75th for 3-6, 50th for 7-12, ...)",
+        "evidence": "src/util.rs: `coinbase_fee_rate` = (coinbase revenue - subsidy) / block weight; `cbf_percentile_for_target`; src/chain/cbf.rs FeeSource::Cbf"
+      }
+    ],
+    "summary": "Adds a compact-block-filter chain source whose feerates come from recent blocks' average fees rather than a mempool estimator.",
+    "confidence": "medium",
+    "notes": "Opt-in chain source; the CBF backend can also take fees from Esplora/Electrum. Block-average feerates track mempool estimators poorly, so these nodes may pay noticeably different (often lower) feerates."
+  },
+  {
+    "wallet": "ldk-node",
+    "repo": "lightningdevkit/ldk-node",
+    "pr": 1042,
+    "url": "https://github.com/lightningdevkit/ldk-node/pull/1042",
+    "title": "Fall back to per-target defaults for missing fee estimates",
+    "state": "open",
+    "date": "2026-08-11",
+    "traits": [
+      {
+        "key": "feerate_source",
+        "before": "backend-dependent (missing/invalid estimate for a target cached as 1 sat/vB)",
+        "after": "backend-dependent (missing/invalid estimate falls back to per-target static default on mainnet, e.g. 5000 sat/kwu = 20 sat/vB for on-chain payments, 1000 sat/kwu = 4 sat/vB for channel funding)",
+        "evidence": "src/fee_estimator.rs: `get_fallback_fee_rate_for_network` -> `FeeRate::from_sat_per_kwu(get_fallback_rate_for_target(target))` off regtest/signet; src/chain/electrum.rs no longer `.map_or(0.00001, ...)`"
+      }
+    ],
+    "summary": "When the chain backend has no estimate for a target, on-chain sends use a fixed per-target default (20 sat/vB for payments) instead of 1 sat/vB.",
+    "confidence": "medium",
+    "notes": "Only when the backend omits a target or returns -1 (seen with Electrum, also sparse Esplora maps). Both the old and new fallbacks are round values; the new ones are higher and differ by target."
+  },
+  {
+    "wallet": "ldk-node",
+    "repo": "lightningdevkit/ldk-node",
+    "pr": 1183,
+    "url": "https://github.com/lightningdevkit/ldk-node/pull/1183",
+    "title": "Cap fee rate estimates at a maximum",
+    "state": "open",
+    "date": "2026-10-20",
+    "traits": [
+      {
+        "key": "feerate_source",
+        "before": "backend-dependent (floored at 253 sat/kwu, no cap)",
+        "after": "backend-dependent, clamped to at most 2,000 sat/vB (500,000 sat/kwu)",
+        "evidence": "src/fee_estimator.rs: `.clamp(FEERATE_FLOOR_SATS_PER_KW as u64, MAX_FEERATE_SATS_PER_KW)` with `MAX_FEERATE_SATS_PER_KW: u64 = 2_000 * 250`"
+      }
+    ],
+    "summary": "Caps the estimated feerate for on-chain sends, funding, sweeps and anchor bumps at 2,000 sat/vB.",
+    "confidence": "low",
+    "notes": "Only triggers when the chain source reports more than 2,000 sat/vB (faulty or malicious server). User-supplied feerates are not capped. In practice the effect on chain is negligible."
+  }
+]

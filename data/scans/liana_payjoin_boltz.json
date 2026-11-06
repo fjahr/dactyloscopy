@@ -1,0 +1,234 @@
+[
+  {
+    "wallet": "Liana",
+    "repo": "wizardsardine/liana",
+    "pr": 2192,
+    "url": "https://github.com/wizardsardine/liana/pull/2192",
+    "title": "spend: deterministic, canonical input construction",
+    "state": "open",
+    "date": "2026-07-09",
+    "traits": [
+      {
+        "key": "input_ordering",
+        "before": "selection order",
+        "after": "sorted by outpoint (txid, vout)",
+        "evidence": "liana/src/spend.rs select_coins_for_spend: `let mut v = candidate_coins.to_vec(); v.sort_unstable_by_key(|c| c.outpoint);`. Inputs are pushed in selector.selected_indices() order (BTreeSet = candidate index order), so input order becomes outpoint order."
+      },
+      {
+        "key": "new:coin_selection_tiebreak",
+        "before": "random per run (candidates come from a HashMap)",
+        "after": "deterministic (candidates sorted by outpoint)",
+        "evidence": "PR body: 'candidates come from a HashMap, so tie-breaking (and input order) was random per run, sort by outpoint.'"
+      }
+    ],
+    "summary": "Liana's spend and recovery transactions would order inputs by outpoint and pick coins deterministically, where today input order and tie-breaking follow random HashMap iteration.",
+    "confidence": "medium",
+    "notes": "Written by bc1cindy as a follow-up to rust-payjoin#1597. rust-bitcoin's OutPoint ordering compares the txid's internal byte order, not the reversed display order BIP-69 uses, so this is outpoint-sorted but not strictly BIP-69. It also adds a coin_to_psbt_input helper, which leaves nSequence (0xFFFFFFFD) unchanged."
+  },
+  {
+    "wallet": "Liana",
+    "repo": "wizardsardine/liana",
+    "pr": 2011,
+    "url": "https://github.com/wizardsardine/liana/pull/2011",
+    "title": "[WIP] Payjoin receiver",
+    "state": "open",
+    "date": "2026-02-10",
+    "traits": [
+      {
+        "key": "uih2_avoidance",
+        "before": "N/A",
+        "after": "yes",
+        "evidence": "lianad/src/payjoin/receiver.rs contribute_inputs: `proposal.try_preserving_privacy(candidate_inputs.clone()).unwrap_or(candidate_inputs.next()...)`"
+      },
+      {
+        "key": "utxo_order",
+        "before": "N/A",
+        "after": "non-deterministic",
+        "evidence": "lianad/src/payjoin/receiver.rs: candidates are built in `HashMap::<OutPoint, (Coin, TxIn, Input, Weight)>` and passed on as `candidate_inputs_map.values()`"
+      },
+      {
+        "key": "unconfirmed",
+        "before": "N/A",
+        "after": "no",
+        "evidence": "lianad/src/payjoin/receiver.rs: `db_conn.coins(&[CoinStatus::Confirmed], &[])`"
+      }
+    ],
+    "summary": "Liana gains a BIP77 payjoin receiver that adds one confirmed wallet coin to the sender's transaction, picked by try_preserving_privacy from a HashMap-ordered candidate list.",
+    "confidence": "medium",
+    "notes": "Receiver-only path. WIP, not draft. If try_preserving_privacy fails, it falls back to the first HashMap candidate, which can break UIH avoidance. Outputs are committed without substituting the receiver script. The contributed input's nSequence is ENABLE_RBF_NO_LOCKTIME, and the payjoin lib coerces it to the sender's value. The catalog's Liana uih2/utxo_order values appear to come from this PR. Supersedes the 'DO NOT MERGE' POC #1806, which is not listed."
+  },
+  {
+    "wallet": "Liana",
+    "repo": "wizardsardine/liana",
+    "pr": 2079,
+    "url": "https://github.com/wizardsardine/liana/pull/2079",
+    "title": "gui: add \"Sweep individually\" option for self-transfer",
+    "state": "open",
+    "date": "2026-04-03",
+    "traits": [
+      {
+        "key": "new:self_transfer_shape",
+        "before": "one consolidating tx (all selected coins -> 1 output)",
+        "after": "one 1-input/1-output tx per coin (opt-in)",
+        "evidence": "liana-gui/src/app/state/spend/step.rs: `for (outpoint, feerate) in coin_feerates { daemon.create_spend_tx(&[outpoint], &HashMap::new(), feerate, None) }`"
+      },
+      {
+        "key": "new:feerate_variation",
+        "before": "one user-entered feerate",
+        "after": "per-tx random integer sat/vB in a user-set min/max range (opt-in)",
+        "evidence": "step.rs SweepRandomizeFees: `let feerate = min + (rand_val as u64 % range);` using liana::random::random_bytes()"
+      }
+    ],
+    "summary": "An opt-in GUI mode turns a multi-coin self-transfer into one single-input, single-output transaction per coin, each at a randomized whole-number feerate.",
+    "confidence": "medium",
+    "notes": "Opt-in and GUI-only: the PR states 'No backend changes', so lianad's create_spend is unchanged. Feerates stay whole sat/vB numbers, so the round-feerate tell remains."
+  },
+  {
+    "wallet": "payjoin-cli",
+    "repo": "payjoin/rust-payjoin",
+    "pr": 1878,
+    "url": "https://github.com/payjoin/rust-payjoin/pull/1878",
+    "title": "Payjoin-cli : add `--consolidate` mode",
+    "state": "open",
+    "date": "2026-09-14",
+    "traits": [
+      {
+        "key": "uih2_avoidance",
+        "before": "yes",
+        "after": "no (with --consolidate: try_preserving_privacy is skipped)",
+        "evidence": "payjoin-cli/src/app/v2/mod.rs & v1.rs: `let inputs = if consolidate.is_some() { wallet.select_receiver_utxos(consolidate)? ... } else { vec![proposal.try_preserving_privacy(candidate_inputs)?] }`"
+      },
+      {
+        "key": "utxo_order",
+        "before": "deterministic",
+        "after": "deterministic (smallest amount first)",
+        "evidence": "payjoin-cli/src/app/wallet.rs select_receiver_utxos: `unspent.sort_by_key(|utxo| Amount::from_btc(...)); unspent.drain(..smallest)`"
+      },
+      {
+        "key": "new:receiver_input_count",
+        "before": "1",
+        "after": "up to N smallest UTXOs (default 10)",
+        "evidence": "payjoin-cli/src/cli/mod.rs: `#[arg(long = \"consolidate\", num_args = 0..=1, default_missing_value = \"10\")]`"
+      }
+    ],
+    "summary": "With the new opt-in --consolidate flag, the payjoin-cli receiver adds its N smallest UTXOs to the payjoin instead of one privacy-preserving input.",
+    "confidence": "high",
+    "notes": "Opt-in flag, receiver-only path, v1 and v2. Not a draft. The default path (one input via try_preserving_privacy) is unchanged. The PR says the input cap exists because of the BIP77 7088-byte proposal limit."
+  },
+  {
+    "wallet": "payjoin-cli",
+    "repo": "payjoin/rust-payjoin",
+    "pr": 1966,
+    "url": "https://github.com/payjoin/rust-payjoin/pull/1966",
+    "title": "Payjoin-cli: add `--cut-through` mode",
+    "state": "open",
+    "date": "2026-10-10",
+    "traits": [
+      {
+        "key": "num_outputs",
+        "before": "single recipient",
+        "after": "multi-recipient (adds a forwarded third-party output with --cut-through)",
+        "evidence": "payjoin-cli/src/app/v2/mod.rs commit_outputs: `proposal.replace_receiver_outputs(vec![receiver_output.clone(), forward], &drain_script)`"
+      },
+      {
+        "key": "uih2_avoidance",
+        "before": "yes",
+        "after": "no (with --cut-through: value-driven selection, try_preserving_privacy skipped)",
+        "evidence": "payjoin-cli: `let inputs = if consolidate.is_some() || min_total > Amount::ZERO { wallet.select_receiver_utxos(consolidate, min_total)? ... }`"
+      },
+      {
+        "key": "new:receiver_input_selection",
+        "before": "one input via try_preserving_privacy",
+        "after": "smallest UTXOs for consolidation, then largest-first top-up until the forwarded amount is covered",
+        "evidence": "payjoin-cli/src/app/wallet.rs select_receiver_utxos: `while total < min_total { // Sorted ascending, so popping takes the largest remaining.`"
+      }
+    ],
+    "summary": "With the new opt-in --cut-through flag, the payjoin-cli receiver adds a third-party payment output to the payjoin and funds it with its own largest UTXOs.",
+    "confidence": "medium",
+    "notes": "Opt-in flag, receiver-only path, draft. Stacked on #1878, so the diff includes --consolidate. On v1 with --cut-through, the receiver keeps its original output instead of substituting a fresh address (substitute_receiver_script is skipped). The author lists open TODOs, such as dropping FEE_HEADROOM_VB, so details may change."
+  },
+  {
+    "wallet": "Boltz",
+    "repo": "BoltzExchange/boltz-backend",
+    "pr": 1430,
+    "url": "https://github.com/BoltzExchange/boltz-backend/pull/1430",
+    "title": "Payjoin integration",
+    "state": "open",
+    "date": "2026-06-04",
+    "traits": [
+      {
+        "key": "uih2_avoidance",
+        "before": "N/A",
+        "after": "no",
+        "evidence": "boltzr/src/payjoin/mod.rs select_contribution_input: `candidates.sort_by_key(|(amount, _)| *amount); for (_, input) in candidates { if receiver.clone().contribute_inputs(vec![input.clone()]).is_ok() { return Ok(input); } }`. try_preserving_privacy is never called."
+      },
+      {
+        "key": "utxo_order",
+        "before": "N/A",
+        "after": "deterministic",
+        "evidence": "boltzr/src/payjoin/mod.rs: wallet listunspent sorted ascending by amount, first fit wins"
+      },
+      {
+        "key": "unconfirmed",
+        "before": "N/A",
+        "after": "no",
+        "evidence": "boltzr/src/payjoin/mod.rs: `btc_chain.list_unspent(None)` -> chain_client.rs `request_wallet(..., \"listunspent\", None)` (Core default minconf=1)"
+      },
+      {
+        "key": "new:lockup_output_value",
+        "before": "lockup output = expected swap amount",
+        "after": "lockup output = swap amount + contributed Boltz UTXO (oversized consolidation lockup)",
+        "evidence": "commit_outputs() without output substitution; contribute_inputs adds the input to the drain (lockup) output. The PR body says it allows 'the intentional oversized consolidation lockup'."
+      }
+    ],
+    "summary": "On BTC->LN submarine swaps, Boltz would act as a payjoin receiver, adding its smallest UTXO that fits to the user's lockup transaction and folding that value into the swap lockup output.",
+    "confidence": "medium",
+    "notes": "Draft, receiver-only path, lockup txs of BTC->LN submarine swaps only. The PR revives #892. Contributed inputs are signed by Core walletprocesspsbt, and the input type comes from the UTXO's address (P2WPKH/P2TR/other), not matched to the sender. The catalog's Boltz 'uih2_avoidance: yes' seems to come from an earlier revision (f3c117a) that used try_preserving_privacy. The current head (7a315f04) uses smallest-first first-fit."
+  },
+  {
+    "wallet": "Boltz",
+    "repo": "BoltzExchange/boltz-backend",
+    "pr": 892,
+    "url": "https://github.com/BoltzExchange/boltz-backend/pull/892",
+    "title": "[Draft] Payjoin Submarine Swap Consolidation",
+    "state": "open",
+    "date": "2025-04-09",
+    "traits": [
+      {
+        "key": "uih2_avoidance",
+        "before": "N/A",
+        "after": "yes",
+        "evidence": "boltzr payjoin try_contributing_inputs: `payjoin.try_preserving_privacy(candidate_inputs)` then `contribute_inputs(vec![selected_input])`"
+      },
+      {
+        "key": "utxo_order",
+        "before": "N/A",
+        "after": "deterministic",
+        "evidence": "candidates = `client.list_unspent()` (Core listunspent order, no sort)"
+      }
+    ],
+    "summary": "An older hackathon draft makes Boltz a payjoin receiver for submarine swap lockups, adding one treasury UTXO chosen by try_preserving_privacy.",
+    "confidence": "low",
+    "notes": "Draft by DanGould, receiver-only path. Stale (last updated 2025-06) and superseded by #1430, which switched to smallest-first selection. It targets an old rust-payjoin API."
+  },
+  {
+    "wallet": "Boltz",
+    "repo": "BoltzExchange/boltz-backend",
+    "pr": 1164,
+    "url": "https://github.com/BoltzExchange/boltz-backend/pull/1164",
+    "title": "feat: funding addresses",
+    "state": "open",
+    "date": "2025-12-19",
+    "traits": [
+      {
+        "key": "tx_version",
+        "before": "2",
+        "after": "3 (TRUC)",
+        "evidence": "boltz-core/src/bitcoin/tx.rs construct_raw: `-        version: Version::TWO,` / `+        // Use V3 transactions to enable zero-fee presigned funding-address transactions ... via TRUC relay.` / `+        version: Version(3),`"
+      }
+    ],
+    "summary": "Every Bitcoin claim and refund transaction built by Rust boltz-core's construct_raw would switch from nVersion 2 to nVersion 3 (TRUC), not only the new funding-address ones.",
+    "confidence": "medium",
+    "notes": "Claim/refund/sweep only. Affects txs built by boltz-core Rust (boltzr swap claims via swap/manager.rs, the refund bumper, and new funding-address claims). TypeScript-side claims through the boltz-core npm package (Claim.ts) are not touched. The Liquid/elements tx.rs keeps its version. The PR has merge conflicts (last updated 2026-03-24), so the exact scope may change on rebase."
+  }
+]

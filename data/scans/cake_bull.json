@@ -1,0 +1,240 @@
+[
+ {
+  "wallet": "Cake Wallet",
+  "repo": "cake-tech/bitcoin_base",
+  "pr": 12,
+  "url": "https://github.com/cake-tech/bitcoin_base/pull/12",
+  "title": "Fix RBF nsequence: canonical value, all inputs",
+  "state": "open",
+  "date": "2026-06-02",
+  "traits": [
+   {
+    "key": "nsequence",
+    "before": "[0x01, 0xFFFFFFD]",
+    "after": "0xFFFFFFFD (RBF)",
+    "evidence": "lib/src/bitcoin/script/op_code/constant.dart: replaceByFeeSequence [0x01,0x00,0x00,0x00] -> [0xfd,0xff,0xff,0xff]; transaction_builder.dart + forked_transaction_builder.dart: `if (enableRBF && inputs.isNotEmpty) inputs[0] = ...` -> loop sets RBF sequence on every input"
+   }
+  ],
+  "summary": "RBF-signalling sends would set nSequence 0xFFFFFFFD on every input, replacing 0x01 on input 0 only (which also imposed a 1-block BIP-68 relative timelock).",
+  "confidence": "medium",
+  "notes": "Library PR in Cake's fork. It targets the fork's `main` branch, but Cake pins branch `cake-update-v11` (commit 4e41f96f), which still has the old code, so the change reaches Cake only once ported to that branch and the pin is bumped. Upstream mrtnetwork/bitcoin_base merged the same change as #21 (2026-07-11). Cake's PSBT/hardware path was already switched to 0xFFFFFFFD by merged cake_wallet #3077. Cake software sends set enableRBF = !spendsUnconfirmedTX."
+ },
+ {
+  "wallet": "Cake Wallet",
+  "repo": "cake-tech/cake_wallet",
+  "pr": 3417,
+  "url": "https://github.com/cake-tech/cake_wallet/pull/3417",
+  "title": "fix silent OP_RETURN writting on bip-21 opening",
+  "state": "open",
+  "date": "2026-07-18",
+  "traits": [
+   {
+    "key": "op_return",
+    "before": "yes",
+    "after": "yes (only from an explicit memo; no longer auto-filled from BIP-21 message)",
+    "evidence": "lib/new-ui/pages/send_page.dart: `_memoControllers[0].text = ...note` -> `_applyPaymentRequestNote(note, i)`, which writes to the memo (-> OP_RETURN) only when sendViewModel.hasMemos, otherwise to a local note"
+   }
+  ],
+  "summary": "Opening a BIP-21 URI or QR code would stop silently adding the payee's `message` text as an OP_RETURN output on Bitcoin sends.",
+  "confidence": "medium",
+  "notes": "New-UI send page only. The author says it is untested ('vibe coded, as a courtesy'). OP_RETURN still appears for memos set elsewhere (e.g. swap memos), so the catalog value stays 'yes' but these outputs become rarer."
+ },
+ {
+  "wallet": "Cake Wallet",
+  "repo": "cake-tech/cake_wallet",
+  "pr": 3790,
+  "url": "https://github.com/cake-tech/cake_wallet/pull/3790",
+  "title": "Cw 1678 disable address types other than segwit and taproot by default",
+  "state": "open",
+  "date": "2026-10-30",
+  "traits": [
+   {
+    "key": "input_type",
+    "before": "mixed (P2WPKH/P2TR/P2SH/…)",
+    "after": "P2WPKH/P2TR by default (P2PKH, P2SH-P2WPKH, P2WSH opt-in)",
+    "evidence": "cw_bitcoin/lib/electrum_wallet_addresses.dart: new OPTIONAL_BITCOIN_ADDRESS_TYPES = [p2pkh, p2wsh, p2wpkhInP2sh] + isAddressTypeEnabledFor(); electrum_wallet.dart: disabled types skip derivation, subscription, history fetch and unspent updates (activeAddresses)"
+   }
+  ],
+  "summary": "Bitcoin wallets stop deriving and tracking P2PKH, P2SH-P2WPKH and P2WSH addresses unless the user enables them, so by default sends spend only P2WPKH/P2TR inputs.",
+  "confidence": "medium",
+  "notes": "New Addresses settings screen re-enables the legacy types (not on hardware wallets). The UTXO effect is indirect: disabled types are not subscribed, so their coins are not loaded for spending. Mixing P2WPKH with P2TR stays possible, so single_type is still 'no'. I did not verify how existing wallets with legacy-type funds are migrated."
+ },
+ {
+  "wallet": "Cake Wallet",
+  "repo": "cake-tech/cake_wallet",
+  "pr": 3758,
+  "url": "https://github.com/cake-tech/cake_wallet/pull/3758",
+  "title": "Custom block explorers",
+  "state": "open",
+  "date": "2026-10-24",
+  "traits": [
+   {
+    "key": "feerate_source",
+    "before": "mempool.cakewallet.com",
+    "after": "mempool.cakewallet.com (default) or user-configured mempool instance",
+    "evidence": "cw_bitcoin/lib/electrum_wallet.dart updateFeeRates(): hard-coded https://mempool.cakewallet.com/api/v1/fees/recommended -> fetchMempoolApi('/api/v1/fees/recommended') using the CustomBlockExplorers.mempoolApiPrefsKey pref; cw_core/lib/custom_block_explorers.dart mempoolApiUris() never falls back to Cake's server when a custom base is set"
+   }
+  ],
+  "summary": "Users can point fee estimation at their own mempool.space instance, so the fee rate Cake picks may come from a different estimator.",
+  "confidence": "medium",
+  "notes": "Opt-in (custom block explorer setting). Defaults are unchanged."
+ },
+ {
+  "wallet": "Cake Wallet",
+  "repo": "cake-tech/cake_wallet",
+  "pr": 2520,
+  "url": "https://github.com/cake-tech/cake_wallet/pull/2520",
+  "title": "Switch to cake.mempool.space",
+  "state": "open",
+  "date": "2025-09-11",
+  "traits": [
+   {
+    "key": "feerate_source",
+    "before": "mempool.cakewallet.com",
+    "after": "cake.mempool.space",
+    "evidence": "cw_bitcoin/lib/electrum_wallet.dart: Uri.parse('https://mempool.cakewallet.com/api/v1/fees/recommended') -> 'https://cake.mempool.space/api/v1/fees/recommended'"
+   }
+  ],
+  "summary": "The default fee-rate source would move from Cake's mempool host to cake.mempool.space.",
+  "confidence": "low",
+  "notes": "Possibly a host migration with the same estimator, so the on-chain effect on fee rates may be nil. Open since 2025-09 and probably stale. Also changes the default Electrum node to cake.mempool.space:50002."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2431,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2431",
+  "title": "payjoin: exclude 0-conf inputs from receiver candidates",
+  "state": "open",
+  "date": "2026-07-09",
+  "traits": [
+   {
+    "key": "unconfirmed",
+    "before": "yes",
+    "after": "no",
+    "evidence": "lib/core/payjoin/data/repository/payjoin_repository_impl.dart: candidate filter adds `.where((u) => u.confirmations > 0)`"
+   }
+  ],
+  "summary": "As a payjoin receiver, Bull would stop contributing unconfirmed UTXOs to the payjoin transaction.",
+  "confidence": "high",
+  "notes": "Payjoin receiver path only; normal sends are unaffected. Cake merged the equivalent change (cake_wallet #3389). Ref: payjoin/rust-payjoin#1597."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2756,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2756",
+  "title": "feat(send): support multiple bitcoin recipients",
+  "state": "open",
+  "date": "2026-08-28",
+  "traits": [
+   {
+    "key": "num_outputs",
+    "before": "single recipient",
+    "after": "multi-recipient",
+    "evidence": "lib/core/wallet/data/datasources/bdk_wallet_datasource.dart buildPsbt: `required String address, int? amountSat` -> `required List<BitcoinTransactionRecipientModel> recipients`, looping `txBuilder.addRecipient(...)` per recipient (one optional drainTo remainder recipient)"
+   }
+  ],
+  "summary": "On-chain sends could pay several recipients in one transaction (batched outputs plus change), where before Bull always paid a single recipient.",
+  "confidence": "high",
+  "notes": "Opt-in (user adds recipients; the single-recipient flow is unchanged). Payjoin is disabled for multi-recipient transactions. Stacked PR: it depends on #2745 (UTXO sweep), which I excluded because it reuses the existing manual-selection/drain path."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2712,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2712",
+  "title": "feat(payjoin): independent Receive / Trade / Send payjoin settings",
+  "state": "open",
+  "date": "2026-08-23",
+  "traits": [
+   {
+    "key": "new:payjoin_default",
+    "before": "payjoin off by default (global setting, disclaimer-gated)",
+    "after": "payjoin on by default for Bull exchange buy/sell/bill-pay orders",
+    "evidence": "packages/bull_payjoin (Drift schema v2): `BoolColumn get tradingEnabled => boolean().withDefault(const Constant(true))()`; PR body: 'Even with global payjoin off (the default), buy/sell/pay orders use payjoin out of the box.'"
+   }
+  ],
+  "summary": "Exchange-trade payments to and from Bull Bitcoin would default to payjoin transactions (both sides contribute inputs) instead of plain sends.",
+  "confidence": "medium",
+  "notes": "Affects only exchange-trade flows (Bull is the counterparty). Wallet-to-wallet payjoin stays off by default. Users can turn it off with the new 'Payjoin trading enabled' toggle."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2703,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2703",
+  "title": "fix(send): harden fee loading and transaction construction",
+  "state": "open",
+  "date": "2026-08-21",
+  "traits": [
+   {
+    "key": "feerate_source",
+    "before": "mempool.bullbitcoin.com",
+    "after": "mempool.bullbitcoin.com (embedded-Tor retry); cached or fixed fallback when unreachable",
+    "evidence": "lib/core/fees/data/fees_repository_impl.dart: _fetchBitcoinNetworkFees() adds external-proxy / embedded-Tor routes; lib/features/send/domain/usecases/load_send_fees_usecase.dart: on failure uses previousBitcoinFees ?? _buildFallbackBitcoinFees()"
+   },
+   {
+    "key": "round_feerate",
+    "before": "round only if custom",
+    "after": "round only if custom, or 1 sat/vB when fee APIs fail",
+    "evidence": "load_send_fees_usecase.dart _buildFallbackBitcoinFees(): fastest/economic/slow = NetworkFee.relativeFromSatPerVbyte(1)"
+   }
+  ],
+  "summary": "When no fee estimate can be fetched, sends would fall back to the last fetched rates or a flat 1 sat/vB, where before the send failed.",
+  "confidence": "low",
+  "notes": "Edge case only (all fee paths down). The UI shows a warning and the user can still set a custom fee."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2811,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2811",
+  "title": "feat(bullvault): add descriptor wallet and vault workflows",
+  "state": "open",
+  "date": "2026-09-09",
+  "traits": [
+   {
+    "key": "input_type",
+    "before": "P2WPKH",
+    "after": "P2WPKH, plus P2WSH/P2TR miniscript inputs from BullVault/descriptor wallets",
+    "evidence": "lib/core/wallet/data/datasources/bdk_wallet_datasource.dart: buildPsbt gains `BitcoinPolicyPath? policyPath` -> `txBuilder.policyPath(...)` for external/internal descriptors; `isTaproot: parsedDescriptor.externalDescriptor.startsWith('tr(')`"
+   },
+   {
+    "key": "nsequence",
+    "before": "0xFFFFFFFF (MAX)",
+    "after": "CSV relative-timelock value on vault recovery-path spends",
+    "evidence": "bdk_wallet_datasource.dart: `if (!replaceByFee && policyPath?.requiresRelativeTimelock != true)` keeps setExactSequence off so BDK sets the CSV sequence for timelocked paths"
+   }
+  ],
+  "summary": "Adds BullVault/descriptor wallets that spend miniscript P2WSH/P2TR outputs (multisig, timelocked recovery and inheritance paths), which are new input script types for Bull.",
+  "confidence": "medium",
+  "notes": "Opt-in (new BullVault/descriptor-import feature). Very large PR (300+ files); I read only the BDK datasource patch via the files API. Open PRs #2824 and #2832 appear to bundle the same commits. Note: current develop's comment says bdk_dart defaults to nSequence 0xFFFFFFFD, which conflicts with the catalog's MAX for Bull. I kept the catalog value as 'before'."
+ },
+ {
+  "wallet": "Bull Bitcoin",
+  "repo": "SatoshiPortal/bullbitcoin-mobile",
+  "pr": 2441,
+  "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2441",
+  "title": "[privacy] Implement Joinstr coinjoin (proof of concept)",
+  "state": "open",
+  "date": "2026-07-12",
+  "traits": [
+   {
+    "key": "sighash_nonall",
+    "before": "no",
+    "after": "SIGHASH_ALL|ANYONECANPAY in Joinstr coinjoins",
+    "evidence": "lib/features/joinstr/data/joinstr_datasource.dart (comment): 'we broadcast a SIGHASH_ALL|SIGHASH_ANYONECANPAY signature over the coin'"
+   },
+   {
+    "key": "new:coinjoin",
+    "before": "none",
+    "after": "Joinstr equal-denomination coinjoin (one input per peer)",
+    "evidence": "lib/features/joinstr/domain/joinstr.dart: denominationSat pools, isEligibleCoin(denomination+500 <= value <= denomination+5000); uses joinstr_flutter bindings"
+   }
+  ],
+  "summary": "Adds a Joinstr coinjoin flow: one input per peer with ANYONECANPAY signatures, paying equal-denomination outputs.",
+  "confidence": "low",
+  "notes": "Draft proof of concept behind superuser settings, testnet only, hot BIP84 wallets only, so there is no mainnet effect yet. Tx construction happens in the external rust-joinstr/joinstr_flutter bindings."
+ }
+]

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dactyloscopy</title>
+<meta name="description" content="Open pull requests that change how Bitcoin wallet transactions look on chain.">
+<style>
+  :root {
+    --paper: #F3F5F8;
+    --ink: #1A2233;
+    --ink-soft: #566074;
+    --ridge: #CDD3DE;
+    --red: #B3261E;
+    --green: #1E7A46;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--paper); color: var(--ink); }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 28px 72px;
+  }
+
+  /* Header: the fingerprint and the title side by side. */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 64px;
+  }
+
+  .print { width: 150px; height: auto; display: block; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.8rem, 7.5vw, 5.4rem);
+    line-height: 1;
+    letter-spacing: -0.012em;
+    margin: 0 0 18px;
+  }
+
+  .lede {
+    font-size: 1.12rem;
+    max-width: 34em;
+    margin: 0;
+  }
+
+  /* The two verdict columns. */
+  .verdicts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .col h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    margin: 0 0 24px;
+  }
+
+  .col-red h2 { color: var(--red); }
+  .col-green h2 { color: var(--green); }
+
+  .col { min-width: 0; }
+
+  .prs { list-style: none; margin: 0; padding: 0; overflow-wrap: anywhere; }
+
+  .pr {
+    border-left: 3px solid var(--ridge);
+    padding: 2px 0 2px 16px;
+    margin: 0 0 26px;
+  }
+
+  .col-red .pr { border-left-color: var(--red); }
+  .col-green .pr { border-left-color: var(--green); }
+
+  .pr-meta {
+    margin: 0 0 2px;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+  }
+
+  .pr-wallet { color: var(--ink); font-weight: 600; margin-right: 6px; }
+
+  .pr-title {
+    display: inline-block;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 1.03rem;
+    text-decoration: none;
+    margin-bottom: 4px;
+  }
+
+  .pr-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  .pr-title:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .pr-reason {
+    margin: 0;
+    font-size: 0.96rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 36em;
+  }
+
+  .foot {
+    margin-top: 56px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .foot a { color: inherit; text-underline-offset: 3px; }
+
+  /* Ridges start as grey ink and develop their color from the core outward, once.
+     If the animation never runs, the print still shows (grey). */
+  .ridge {
+    fill: none;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke: var(--ridge);
+    transition: opacity 0.15s ease, stroke-width 0.15s ease;
+  }
+
+  .ridge.red { stroke: var(--red); }
+  .ridge.green { stroke: var(--green); }
+
+  .ridge.red, .ridge.green { animation: develop 0.7s ease-out backwards; }
+
+  @keyframes develop { from { stroke: var(--ridge); } }
+
+  .print.focus .ridge { opacity: 0.18; }
+  .print.focus .ridge.on { opacity: 1; stroke-width: 3.4; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ridge.red, .ridge.green { animation: none; }
+    .ridge { transition: none; }
+  }
+
+  @media (min-width: 760px) {
+    .head { grid-template-columns: 210px 1fr; gap: 44px; }
+    .print { width: 210px; }
+  }
+
+  @media (min-width: 900px) {
+    .verdicts { grid-template-columns: 1fr 1fr; gap: 64px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="head">
+    <svg class="print" viewBox="0 0 200 250" role="img" aria-labelledby="print-label"><title id="print-label"></title></svg>
+    <div>
+      <h1>Dactyloscopy</h1>
+      <p class="lede">Wallets give themselves away through small choices in how they build transactions. These open pull requests would change those choices.</p>
+    </div>
+  </header>
+
+  <div class="verdicts">
+    <section class="col col-red" aria-labelledby="red-head">
+      <h2 id="red-head"></h2>
+      <ul class="prs" id="red-list"></ul>
+    </section>
+    <section class="col col-green" aria-labelledby="green-head">
+      <h2 id="green-head"></h2>
+      <ul class="prs" id="green-list"></ul>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <p>Compared against the wallets in <a href="https://github.com/arminsabouri/walletfingerprints.info">walletfingerprints.info</a>. Open pull requests as of November 6, 2026.</p>
+  </footer>
+</main>
+
+<script>
+const PRS = [{"wallet": "Boltz", "repo": "BoltzExchange/boltz-backend", "pr": 892, "title": "[Draft] Payjoin Submarine Swap Consolidation", "url": "https://github.com/BoltzExchange/boltz-backend/pull/892", "date": "2025-04-09", "verdict": "green", "reason": "The payjoin receiver avoids UIH2. Superseded by #1430, which drops the check.", "ridge": 0}, {"wallet": "Bitcoin Core", "repo": "bitcoin/bitcoin", "pr": 32857, "title": "wallet: allow skipping script paths", "url": "https://github.com/bitcoin/bitcoin/pull/32857", "date": "2025-07-02", "verdict": "green", "reason": "Taproot spends can stay on the key path, so they look like any single-key taproot spend.", "ridge": 1}, {"wallet": "ldk-node", "repo": "lightningdevkit/ldk-node", "pr": 638, "title": "Implement CPFP fee bumping for unconfirmed transactions", "url": "https://github.com/lightningdevkit/ldk-node/pull/638", "date": "2025-09-17", "verdict": "red", "reason": "The CPFP child sends its output back to the address it spends from. No other wallet does this.", "ridge": 2}, {"wallet": "Boltz", "repo": "BoltzExchange/boltz-backend", "pr": 1164, "title": "feat: funding addresses", "url": "https://github.com/BoltzExchange/boltz-backend/pull/1164", "date": "2025-12-19", "verdict": "red", "reason": "Every claim and refund moves to nVersion 3, which no other wallet uses yet.", "ridge": 3}, {"wallet": "ldk-node", "repo": "lightningdevkit/ldk-node", "pr": 746, "title": "Add Payjoin Receiver Support (BIP 77)", "url": "https://github.com/lightningdevkit/ldk-node/pull/746", "date": "2026-01-08", "verdict": "green", "reason": "The payjoin receiver avoids the unnecessary-input heuristic (UIH2), like most payjoin receivers.", "ridge": 4}, {"wallet": "Liana", "repo": "wizardsardine/liana", "pr": 2011, "title": "[WIP] Payjoin receiver", "url": "https://github.com/wizardsardine/liana/pull/2011", "date": "2026-02-10", "verdict": "green", "reason": "The payjoin receiver avoids the unnecessary-input heuristic (UIH2), like most payjoin receivers.", "ridge": 5}, {"wallet": "ldk-node", "repo": "lightningdevkit/ldk-node", "pr": 828, "title": "Add chain syncing via compact block filters (BIP 157)", "url": "https://github.com/lightningdevkit/ldk-node/pull/828", "date": "2026-03-15", "verdict": "red", "reason": "Fee rates come from recent block averages, so payments stand out from mempool-based wallets.", "ridge": 6}, {"wallet": "Electrum", "repo": "spesmilo/electrum", "pr": 10650, "title": "submarine_swaps: Reintroduce support for the old submarine swap protocol", "url": "https://github.com/spesmilo/electrum/pull/10650", "date": "2026-05-15", "verdict": "red", "reason": "Swap server claims reveal a second, older HTLC script template.", "ridge": 7}, {"wallet": "Bitcoin Core", "repo": "bitcoin/bitcoin", "pr": 35433, "title": "wallet: deprecate replaceable argument from transaction (and psbt) creation (and modification) RPCs", "url": "https://github.com/bitcoin/bitcoin/pull/35433", "date": "2026-06-01", "verdict": "green", "reason": "Fewer Core transactions use the rare non-RBF sequence number.", "ridge": 8}, {"wallet": "Cake Wallet", "repo": "cake-tech/bitcoin_base", "pr": 12, "title": "Fix RBF nsequence: canonical value, all inputs", "url": "https://github.com/cake-tech/bitcoin_base/pull/12", "date": "2026-06-02", "verdict": "green", "reason": "Every input gets the common RBF sequence number instead of a mix only Cake uses.", "ridge": 9}, {"wallet": "Boltz", "repo": "BoltzExchange/boltz-backend", "pr": 1430, "title": "Payjoin integration", "url": "https://github.com/BoltzExchange/boltz-backend/pull/1430", "date": "2026-06-04", "verdict": "red", "reason": "The payjoin receiver adds its smallest fitting coin and skips the unnecessary-input check (UIH2).", "ridge": 10}, {"wallet": "Bull Bitcoin", "repo": "SatoshiPortal/bullbitcoin-mobile", "pr": 2431, "title": "payjoin: exclude 0-conf inputs from receiver candidates", "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2431", "date": "2026-07-09", "verdict": "green", "reason": "The payjoin receiver stops adding unconfirmed coins, like other payjoin receivers.", "ridge": 11}, {"wallet": "Liana", "repo": "wizardsardine/liana", "pr": 2192, "title": "spend: deterministic, canonical input construction", "url": "https://github.com/wizardsardine/liana/pull/2192", "date": "2026-07-09", "verdict": "red", "reason": "Inputs get sorted by outpoint in an order no other wallet uses. Most wallets shuffle.", "ridge": 12}, {"wallet": "Electrum", "repo": "spesmilo/electrum", "pr": 10756, "title": "Taproot swaps", "url": "https://github.com/spesmilo/electrum/pull/10756", "date": "2026-07-16", "verdict": "green", "reason": "Cooperative swap claims become ordinary taproot spends instead of revealing an HTLC script.", "ridge": 13}, {"wallet": "Cake Wallet", "repo": "cake-tech/cake_wallet", "pr": 3417, "title": "fix silent OP_RETURN writting on bip-21 opening", "url": "https://github.com/cake-tech/cake_wallet/pull/3417", "date": "2026-07-18", "verdict": "green", "reason": "Payment-link messages stop becoming OP_RETURN outputs, which most wallets never add.", "ridge": 14}, {"wallet": "Bitcoin Core", "repo": "bitcoin/bitcoin", "pr": 36040, "title": "Wallet: Don't backdate locktime rbf", "url": "https://github.com/bitcoin/bitcoin/pull/36040", "date": "2026-08-20", "verdict": "green", "reason": "Fee bumps stop lowering nLockTime, a rare pattern that singled out Core and Electrum.", "ridge": 15}, {"wallet": "Bull Bitcoin", "repo": "SatoshiPortal/bullbitcoin-mobile", "pr": 2712, "title": "feat(payjoin): independent Receive / Trade / Send payjoin settings", "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2712", "date": "2026-08-23", "verdict": "green", "reason": "Exchange orders default to payjoin, which looks like an ordinary payment on chain.", "ridge": 16}, {"wallet": "BDK", "repo": "bitcoindevkit/bdk_wallet", "pr": 541, "title": "feat(wallet): add TxBuilder::avoid_reuse to skip reused-address UTXOs", "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/541", "date": "2026-09-02", "verdict": "green", "reason": "Optional: skips coins on reused addresses, matching Bitcoin Core's avoid_reuse.", "ridge": 17}, {"wallet": "Bull Bitcoin", "repo": "SatoshiPortal/bullbitcoin-mobile", "pr": 2811, "title": "feat(bullvault): add descriptor wallet and vault workflows", "url": "https://github.com/SatoshiPortal/bullbitcoin-mobile/pull/2811", "date": "2026-09-09", "verdict": "red", "reason": "Optional vaults: recovery spends reveal a timelock script and CSV sequence that few wallets produce.", "ridge": 18}, {"wallet": "payjoin-cli", "repo": "payjoin/rust-payjoin", "pr": 1878, "title": "Payjoin-cli : add `--consolidate` mode", "url": "https://github.com/payjoin/rust-payjoin/pull/1878", "date": "2026-09-14", "verdict": "red", "reason": "Optional mode: the receiver adds up to 10 small coins and skips the unnecessary-input check (UIH2).", "ridge": 19}, {"wallet": "BDK", "repo": "bitcoindevkit/bdk_wallet", "pr": 575, "title": "fix(wallet): filter uneconomical inputs from BnB fallback", "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/575", "date": "2026-09-27", "verdict": "green", "reason": "Stops spending coins worth less than their fee, matching Bitcoin Core.", "ridge": 20}, {"wallet": "payjoin-cli", "repo": "payjoin/rust-payjoin", "pr": 1966, "title": "Payjoin-cli: add `--cut-through` mode", "url": "https://github.com/payjoin/rust-payjoin/pull/1966", "date": "2026-10-10", "verdict": "red", "reason": "Optional mode: the receiver tops up with its largest coins and skips the unnecessary-input check (UIH2).", "ridge": 21}, {"wallet": "BDK", "repo": "bitcoindevkit/bdk_wallet", "pr": 599, "title": "fix(wallet): avoid reissuing change address after reload", "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/599", "date": "2026-10-13", "verdict": "green", "reason": "Stops two transactions from paying change to the same address.", "ridge": 22}, {"wallet": "BDK", "repo": "bitcoindevkit/bdk_wallet", "pr": 605, "title": "Fix/build fee bump multi transaction", "url": "https://github.com/bitcoindevkit/bdk_wallet/pull/605", "date": "2026-10-19", "verdict": "red", "reason": "One replacement can merge several unconfirmed transactions, a shape few wallets produce.", "ridge": 23}, {"wallet": "Cake Wallet", "repo": "cake-tech/cake_wallet", "pr": 3790, "title": "Cw 1678 disable address types other than segwit and taproot by default", "url": "https://github.com/cake-tech/cake_wallet/pull/3790", "date": "2026-10-30", "verdict": "green", "reason": "Stops mixing legacy input types by default. Transactions use the common SegWit and taproot inputs.", "ridge": 24}];
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const print = document.querySelector(".print");
+
+// One ridge per pull request, oldest at the core, plus a few uncolored outer ridges.
+// Spacing shrinks as ridges are added so the print always fits the drawing.
+const total = Math.max(PRS.length + 6, 26);
+const step = (86 - 7) / (total - 1);
+
+function ridgePath(i) {
+  const cx = 100, cy = 126;
+  const rx = 7 + i * step;
+  const ry = rx * 1.3;
+  const tilt = (-10 + i * 0.5) * Math.PI / 180;
+  const gapAt = ((i * 137) % 360) * Math.PI / 180;   // spread the breaks around the print
+  const gap = 0.55 + (i % 3) * 0.12;
+  const start = gapAt + gap / 2;
+  const end = gapAt + 2 * Math.PI - gap / 2;
+  const pt = (a) => {
+    const x = rx * Math.cos(a), y = ry * Math.sin(a);
+    return [cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)];
+  };
+  const [x0, y0] = pt(start), [x1, y1] = pt(end);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${rx.toFixed(2)} ${ry.toFixed(2)} ${(tilt * 180 / Math.PI).toFixed(2)} 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+const ridges = [];
+for (let i = 0; i < total; i++) {
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", ridgePath(i));
+  path.setAttribute("class", "ridge");
+  path.style.animationDelay = `${300 + i * 45}ms`;
+  print.appendChild(path);
+  ridges.push(path);
+}
+
+const red = PRS.filter((p) => p.verdict === "red");
+const green = PRS.filter((p) => p.verdict === "green");
+document.getElementById("print-label").textContent =
+  `A fingerprint with one ridge per pull request: ${red.length} red, ${green.length} green.`;
+
+for (const p of PRS) {
+  const r = ridges[p.ridge];
+  r.classList.add(p.verdict);
+  const t = document.createElementNS(SVG_NS, "title");
+  t.textContent = `${p.wallet}: ${p.title}`;
+  r.appendChild(t);
+}
+
+document.getElementById("red-head").textContent = `${red.length} easier to single out`;
+document.getElementById("green-head").textContent = `${green.length} blend in`;
+
+function item(p) {
+  const li = document.createElement("li");
+  li.className = "pr";
+  li.dataset.ridge = p.ridge;
+
+  const meta = document.createElement("p");
+  meta.className = "pr-meta";
+  const wallet = document.createElement("span");
+  wallet.className = "pr-wallet";
+  wallet.textContent = p.wallet;
+  meta.append(wallet, `${p.repo}#${p.pr}`);
+
+  const a = document.createElement("a");
+  a.className = "pr-title";
+  a.href = p.url;
+  a.textContent = p.title;
+
+  const reason = document.createElement("p");
+  reason.className = "pr-reason";
+  reason.textContent = p.reason;
+
+  li.append(meta, a, reason);
+
+  const on = () => { print.classList.add("focus"); ridges[p.ridge].classList.add("on"); };
+  const off = () => { print.classList.remove("focus"); ridges[p.ridge].classList.remove("on"); };
+  li.addEventListener("mouseenter", on);
+  li.addEventListener("mouseleave", off);
+  li.addEventListener("focusin", on);
+  li.addEventListener("focusout", off);
+  return li;
+}
+
+const byDate = (a, b) => (b.date || "").localeCompare(a.date || "");
+red.sort(byDate).forEach((p) => document.getElementById("red-list").appendChild(item(p)));
+green.sort(byDate).forEach((p) => document.getElementById("green-list").appendChild(item(p)));
+</script>
+</body>
+</html>

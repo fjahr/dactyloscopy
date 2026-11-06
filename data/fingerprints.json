@@ -1,0 +1,787 @@
+{
+  "generated_at": "2026-06-29T00:00:00Z",
+  "source": "https://github.com/payjoin/rust-payjoin/issues/1597",
+  "heuristics": {
+    "independent": [
+      {
+        "key": "nsequence",
+        "label": "nSequence policy",
+        "link": "https://learnmeabitcoin.com/technical/transaction/input/sequence/"
+      },
+      {
+        "key": "input_type",
+        "label": "Input script type",
+        "link": "https://learnmeabitcoin.com/technical/script/"
+      },
+      {
+        "key": "input_ordering",
+        "label": "Input ordering",
+        "link": "https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki"
+      },
+      {
+        "key": "tx_version",
+        "label": "nVersion",
+        "link": "https://learnmeabitcoin.com/technical/transaction/version/"
+      },
+      {
+        "key": "single_type",
+        "label": "Single input type"
+      },
+      {
+        "key": "num_outputs",
+        "label": "Max recipients per tx",
+        "link": "https://bitcoinops.org/en/topics/payment-batching/"
+      },
+      {
+        "key": "output_p2pkh",
+        "label": "Sends to P2PKH",
+        "link": "https://learnmeabitcoin.com/technical/script/p2pkh/"
+      },
+      {
+        "key": "output_p2sh",
+        "label": "Sends to P2SH",
+        "link": "https://learnmeabitcoin.com/technical/script/p2sh/"
+      },
+      {
+        "key": "output_p2wpkh",
+        "label": "Sends to P2WPKH",
+        "link": "https://learnmeabitcoin.com/technical/script/p2wpkh/"
+      },
+      {
+        "key": "output_p2wsh",
+        "label": "Sends to P2WSH",
+        "link": "https://learnmeabitcoin.com/technical/script/p2wsh/"
+      },
+      {
+        "key": "output_p2tr",
+        "label": "Sends to P2TR",
+        "link": "https://learnmeabitcoin.com/technical/script/p2tr/"
+      },
+      {
+        "key": "compressed_keys",
+        "label": "Compressed ECDSA pubkeys",
+        "link": "https://learnmeabitcoin.com/technical/keys/public-key/"
+      },
+      {
+        "key": "low_s",
+        "label": "Canonical low-S sig (BIP146)",
+        "link": "https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki"
+      },
+      {
+        "key": "op_return",
+        "label": "Emits OP_RETURN output",
+        "link": "https://learnmeabitcoin.com/technical/script/null-data/"
+      }
+    ],
+    "probabilistic": [
+      {
+        "key": "low_r",
+        "label": "Low-R grinding (71-byte ECDSA)",
+        "link": "https://bitcoinops.org/en/topics/low-r-grinding/"
+      },
+      {
+        "key": "change_position",
+        "label": "Change position"
+      },
+      {
+        "key": "round_feerate",
+        "label": "Round-number feerate tell"
+      }
+    ],
+    "dependent": [
+      {
+        "key": "nlocktime",
+        "label": "nLockTime policy",
+        "link": "https://bitcoinops.org/en/topics/fee-sniping/"
+      },
+      {
+        "key": "change_type",
+        "label": "Change output type"
+      },
+      {
+        "key": "sighash",
+        "label": "Taproot sighash (key-path)",
+        "link": "https://bitcoinops.org/en/topics/taproot/"
+      },
+      {
+        "key": "sighash_nonall",
+        "label": "Non-ALL sighash emitted",
+        "link": "https://learnmeabitcoin.com/technical/transaction/input/signature-hash/"
+      },
+      {
+        "key": "change_matches_input",
+        "label": "Change address matches input"
+      }
+    ],
+    "payjoin_specific": [
+      {
+        "key": "uih2_avoidance",
+        "label": "UIH2 avoidance (receiver)",
+        "link": "https://github.com/payjoin/rust-payjoin/blob/master/payjoin/src/core/receive/common/mod.rs#L274"
+      },
+      {
+        "key": "utxo_order",
+        "label": "Receiver UTXO candidate ordering",
+        "link": "https://github.com/payjoin/rust-payjoin/blob/master/payjoin/src/core/receive/common/mod.rs#L320"
+      }
+    ],
+    "temporal": [
+      {
+        "key": "unconfirmed",
+        "label": "Contributes unconfirmed inputs",
+        "link": "https://bitcoinops.org/en/topics/unconfirmed-transactions/"
+      },
+      {
+        "key": "feerate_source",
+        "label": "Feerate source",
+        "link": "https://bitcoinops.org/en/topics/fee-estimation/"
+      },
+      {
+        "key": "rbf_replacement",
+        "label": "RBF replacement behavior",
+        "link": "https://bitcoinops.org/en/topics/replace-by-fee/"
+      }
+    ]
+  },
+  "wallets": [
+    {
+      "name": "payjoin-cli",
+      "version": "payjoin 1.0.0-rc.3",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH"
+        },
+        "input_ordering": {
+          "norm": 0,
+          "text": "shuffle"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 0,
+        "low_r": 1,
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 0,
+          "text": "random"
+        },
+        "nlocktime": {
+          "norm": 0,
+          "text": "exact tip"
+        },
+        "change_type": {
+          "norm": 0,
+          "text": "matches payment"
+        },
+        "sighash": {
+          "norm": 0,
+          "text": "N/A (ECDSA)"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 0,
+        "feerate_source": {
+          "norm": 0,
+          "text": "user-input"
+        },
+        "num_outputs": {
+          "norm": 0,
+          "text": "single recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 0,
+          "text": "none"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": 0,
+          "text": "round (manual default)"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "ldk-node",
+      "version": "0.8.0 / bdk_wallet 2.3.0",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH"
+        },
+        "input_ordering": {
+          "norm": 0,
+          "text": "shuffle"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 1,
+        "low_r": 1,
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 0,
+          "text": "random"
+        },
+        "nlocktime": {
+          "norm": 0,
+          "text": "exact tip"
+        },
+        "change_type": {
+          "norm": 2,
+          "text": "P2WPKH (descriptor)"
+        },
+        "sighash": {
+          "norm": 0,
+          "text": "N/A (ECDSA)"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 1,
+        "feerate_source": {
+          "norm": 1,
+          "text": "backend-dependent"
+        },
+        "num_outputs": {
+          "norm": 0,
+          "text": "single recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 1,
+          "text": "separate builder"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round only if app passes custom"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "Liana",
+      "version": "14.0.0",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 1,
+          "text": "P2WSH / P2TR"
+        },
+        "input_ordering": {
+          "norm": 2,
+          "text": "selection order"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 1,
+        "low_r": 1,
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 1,
+          "text": "last (deterministic)"
+        },
+        "nlocktime": {
+          "norm": 1,
+          "text": "anti-fee-sniping"
+        },
+        "change_type": {
+          "norm": 2,
+          "text": "same as descriptor"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": 1,
+          "text": "non-deterministic"
+        },
+        "unconfirmed": 0,
+        "feerate_source": {
+          "norm": 0,
+          "text": "user-input (GUI)"
+        },
+        "num_outputs": {
+          "norm": 1,
+          "text": "multi-recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 2,
+          "text": "reuses send path"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": 0,
+          "text": "round (manual default)"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "Boltz",
+      "version": "boltz-backend 3.13.0",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 1,
+          "text": "0xFFFFFFFF (MAX)"
+        },
+        "input_type": {
+          "norm": 3,
+          "text": "any (swap type)"
+        },
+        "input_ordering": {
+          "norm": 1,
+          "text": "BIP-69"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 0,
+        "low_r": 1,
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 3,
+          "text": "no change (sweep)"
+        },
+        "nlocktime": {
+          "norm": 2,
+          "text": "swap timeout height"
+        },
+        "change_type": {
+          "norm": 0,
+          "text": "matches payment"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 0,
+        "feerate_source": {
+          "norm": 2,
+          "text": "mempool.space"
+        },
+        "num_outputs": {
+          "norm": 2,
+          "text": "single-output sweep"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 3,
+          "text": "server-auto (refund)"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": -1,
+          "text": "N/A (no fee surface)"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "Bull Bitcoin",
+      "version": "6.11.1+186",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 1,
+          "text": "0xFFFFFFFF (MAX)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH"
+        },
+        "input_ordering": {
+          "norm": 0,
+          "text": "shuffle"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 1,
+        "low_r": 1,
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 0,
+          "text": "random"
+        },
+        "nlocktime": {
+          "norm": 0,
+          "text": "exact tip"
+        },
+        "change_type": {
+          "norm": 2,
+          "text": "same as descriptor"
+        },
+        "sighash": {
+          "norm": 0,
+          "text": "N/A (ECDSA)"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 1,
+        "feerate_source": {
+          "norm": 3,
+          "text": "mempool.bullbitcoin.com"
+        },
+        "num_outputs": {
+          "norm": 0,
+          "text": "single recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 1,
+          "text": "separate builder"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round only if custom"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "BTCPay Server",
+      "version": "btcpayserver 8b71fb9 / NBXplorer f3da40c",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH (default)"
+        },
+        "input_ordering": {
+          "norm": 0,
+          "text": "shuffle"
+        },
+        "tx_version": {
+          "norm": 1,
+          "text": "sampled (1 or 2)"
+        },
+        "single_type": 1,
+        "low_r": {
+          "norm": 2,
+          "text": "sampled (on-chain rate)"
+        },
+        "uih2_avoidance": 1,
+        "change_position": {
+          "norm": 0,
+          "text": "random"
+        },
+        "nlocktime": {
+          "norm": 4,
+          "text": "sampled (anti-fee-sniping or 0)"
+        },
+        "change_type": {
+          "norm": 1,
+          "text": "matches inputs"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 1,
+        "feerate_source": {
+          "norm": 7,
+          "text": "NBXplorer estimates (~1h default)"
+        },
+        "num_outputs": {
+          "norm": 1,
+          "text": "multi-recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 6,
+          "text": "dedicated bump (no randomization)"
+        },
+        "op_return": 0,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round only if custom"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "Bitcoin Core",
+      "version": "v31.0",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH (default)"
+        },
+        "input_ordering": {
+          "norm": 0,
+          "text": "shuffle"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": {
+          "norm": 2,
+          "text": "prefers single, mixes"
+        },
+        "low_r": 1,
+        "uih2_avoidance": {
+          "norm": -1,
+          "text": "N/A"
+        },
+        "change_position": {
+          "norm": 0,
+          "text": "random"
+        },
+        "nlocktime": {
+          "norm": 1,
+          "text": "anti-fee-sniping (±100 blocks)"
+        },
+        "change_type": {
+          "norm": 0,
+          "text": "matches payment"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": -1,
+          "text": "N/A"
+        },
+        "unconfirmed": 0,
+        "feerate_source": {
+          "norm": 4,
+          "text": "estimatesmartfee (target 6)"
+        },
+        "num_outputs": {
+          "norm": 1,
+          "text": "multi-recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 4,
+          "text": "dedicated feebumper"
+        },
+        "op_return": 1,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round only if manual fee_rate"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": {
+          "norm": 1,
+          "text": "opt-in via API"
+        }
+      }
+    },
+    {
+      "name": "Electrum",
+      "version": "4.7.2",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 0,
+          "text": "0xFFFFFFFD (RBF)"
+        },
+        "input_type": {
+          "norm": 0,
+          "text": "P2WPKH (segwit default)"
+        },
+        "input_ordering": {
+          "norm": 1,
+          "text": "BIP-69"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 1,
+        "low_r": 1,
+        "uih2_avoidance": {
+          "norm": -1,
+          "text": "N/A"
+        },
+        "change_position": {
+          "norm": 2,
+          "text": "BIP-69"
+        },
+        "nlocktime": {
+          "norm": 1,
+          "text": "anti-fee-sniping (±100 blocks)"
+        },
+        "change_type": {
+          "norm": 1,
+          "text": "matches inputs"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": -1,
+          "text": "N/A"
+        },
+        "unconfirmed": 1,
+        "feerate_source": {
+          "norm": 5,
+          "text": "ElectrumX eta:2 / mempool"
+        },
+        "num_outputs": {
+          "norm": 1,
+          "text": "multi-recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 5,
+          "text": "dedicated bump_fee"
+        },
+        "op_return": 1,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round if manual (0.1 precision)"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    },
+    {
+      "name": "Cake Wallet",
+      "version": "bitcoin_base 4.7.0",
+      "fingerprints": {
+        "nsequence": {
+          "norm": 2,
+          "text": "[0x01, 0xFFFFFFD]"
+        },
+        "input_type": {
+          "norm": 2,
+          "text": "mixed (P2WPKH/P2TR/P2SH/…)"
+        },
+        "input_ordering": {
+          "norm": 1,
+          "text": "BIP-69"
+        },
+        "tx_version": {"norm": 2, "text": "2"},
+        "single_type": 0,
+        "low_r": 1,
+        "uih2_avoidance": 0,
+        "change_position": {
+          "norm": 1,
+          "text": "last (deterministic)"
+        },
+        "nlocktime": {
+          "norm": 3,
+          "text": "0 (never set)"
+        },
+        "change_type": {
+          "norm": 3,
+          "text": "P2WPKH (fixed)"
+        },
+        "sighash": {
+          "norm": 1,
+          "text": "64-byte DEFAULT"
+        },
+        "utxo_order": {
+          "norm": 0,
+          "text": "deterministic"
+        },
+        "unconfirmed": 1,
+        "feerate_source": {
+          "norm": 6,
+          "text": "mempool.cakewallet.com"
+        },
+        "num_outputs": {
+          "norm": 1,
+          "text": "multi-recipient"
+        },
+        "output_p2pkh": 1,
+        "output_p2sh": 1,
+        "output_p2wpkh": 1,
+        "output_p2wsh": 1,
+        "output_p2tr": 1,
+        "compressed_keys": 1,
+        "low_s": 1,
+        "rbf_replacement": {
+          "norm": 2,
+          "text": "reuses send path"
+        },
+        "op_return": 1,
+        "round_feerate": {
+          "norm": 1,
+          "text": "round only if custom"
+        },
+        "change_matches_input": 0,
+        "sighash_nonall": 0
+      }
+    }
+  ]
+}

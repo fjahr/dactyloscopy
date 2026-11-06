@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dactyloscopy</title>
+<meta name="description" content="Open pull requests that change how Bitcoin wallet transactions look on chain.">
+<style>
+  :root {
+    --paper: #F3F5F8;
+    --ink: #1A2233;
+    --ink-soft: #566074;
+    --ridge: #CDD3DE;
+    --red: #B3261E;
+    --green: #1E7A46;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--paper); color: var(--ink); }
+
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 28px 72px;
+  }
+
+  /* Header: the fingerprint and the title side by side. */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 64px;
+  }
+
+  .print { width: 150px; height: auto; display: block; }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.8rem, 7.5vw, 5.4rem);
+    line-height: 1;
+    letter-spacing: -0.012em;
+    margin: 0 0 18px;
+  }
+
+  .lede {
+    font-size: 1.12rem;
+    max-width: 34em;
+    margin: 0;
+  }
+
+  /* The two verdict columns. */
+  .verdicts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .col h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    margin: 0 0 24px;
+  }
+
+  .col-red h2 { color: var(--red); }
+  .col-green h2 { color: var(--green); }
+
+  .col { min-width: 0; }
+
+  .prs { list-style: none; margin: 0; padding: 0; overflow-wrap: anywhere; }
+
+  .pr {
+    border-left: 3px solid var(--ridge);
+    padding: 2px 0 2px 16px;
+    margin: 0 0 26px;
+  }
+
+  .col-red .pr { border-left-color: var(--red); }
+  .col-green .pr { border-left-color: var(--green); }
+
+  .pr-meta {
+    margin: 0 0 2px;
+    font-size: 0.84rem;
+    color: var(--ink-soft);
+  }
+
+  .pr-wallet { color: var(--ink); font-weight: 600; margin-right: 6px; }
+
+  .pr-title {
+    display: inline-block;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 1.03rem;
+    text-decoration: none;
+    margin-bottom: 4px;
+  }
+
+  .pr-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  .pr-title:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .pr-reason {
+    margin: 0;
+    font-size: 0.96rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 36em;
+  }
+
+  .foot {
+    margin-top: 56px;
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  .foot a { color: inherit; text-underline-offset: 3px; }
+
+  /* Ridges start as grey ink and develop their color from the core outward, once.
+     If the animation never runs, the print still shows (grey). */
+  .ridge {
+    fill: none;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke: var(--ridge);
+    transition: opacity 0.15s ease, stroke-width 0.15s ease;
+  }
+
+  .ridge.red { stroke: var(--red); }
+  .ridge.green { stroke: var(--green); }
+
+  .ridge.red, .ridge.green { animation: develop 0.7s ease-out backwards; }
+
+  @keyframes develop { from { stroke: var(--ridge); } }
+
+  .print.focus .ridge { opacity: 0.18; }
+  .print.focus .ridge.on { opacity: 1; stroke-width: 3.4; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ridge.red, .ridge.green { animation: none; }
+    .ridge { transition: none; }
+  }
+
+  @media (min-width: 760px) {
+    .head { grid-template-columns: 210px 1fr; gap: 44px; }
+    .print { width: 210px; }
+  }
+
+  @media (min-width: 900px) {
+    .verdicts { grid-template-columns: 1fr 1fr; gap: 64px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="head">
+    <svg class="print" viewBox="0 0 200 250" role="img" aria-labelledby="print-label"><title id="print-label"></title></svg>
+    <div>
+      <h1>Dactyloscopy</h1>
+      <p class="lede">Wallets give themselves away through small choices in how they build transactions. These open pull requests would change those choices.</p>
+    </div>
+  </header>
+
+  <div class="verdicts">
+    <section class="col col-red" aria-labelledby="red-head">
+      <h2 id="red-head"></h2>
+      <ul class="prs" id="red-list"></ul>
+    </section>
+    <section class="col col-green" aria-labelledby="green-head">
+      <h2 id="green-head"></h2>
+      <ul class="prs" id="green-list"></ul>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <p>Compared against the wallets in <a href="https://github.com/arminsabouri/walletfingerprints.info">walletfingerprints.info</a>. Open pull requests as of __CHECKED__.</p>
+  </footer>
+</main>
+
+<script>
+const PRS = __DATA__;
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+const print = document.querySelector(".print");
+
+// One ridge per pull request, oldest at the core, plus a few uncolored outer ridges.
+// Spacing shrinks as ridges are added so the print always fits the drawing.
+const total = Math.max(PRS.length + 6, 26);
+const step = (86 - 7) / (total - 1);
+
+function ridgePath(i) {
+  const cx = 100, cy = 126;
+  const rx = 7 + i * step;
+  const ry = rx * 1.3;
+  const tilt = (-10 + i * 0.5) * Math.PI / 180;
+  const gapAt = ((i * 137) % 360) * Math.PI / 180;   // spread the breaks around the print
+  const gap = 0.55 + (i % 3) * 0.12;
+  const start = gapAt + gap / 2;
+  const end = gapAt + 2 * Math.PI - gap / 2;
+  const pt = (a) => {
+    const x = rx * Math.cos(a), y = ry * Math.sin(a);
+    return [cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)];
+  };
+  const [x0, y0] = pt(start), [x1, y1] = pt(end);
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${rx.toFixed(2)} ${ry.toFixed(2)} ${(tilt * 180 / Math.PI).toFixed(2)} 1 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+}
+
+const ridges = [];
+for (let i = 0; i < total; i++) {
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", ridgePath(i));
+  path.setAttribute("class", "ridge");
+  path.style.animationDelay = `${300 + i * 45}ms`;
+  print.appendChild(path);
+  ridges.push(path);
+}
+
+const red = PRS.filter((p) => p.verdict === "red");
+const green = PRS.filter((p) => p.verdict === "green");
+document.getElementById("print-label").textContent =
+  `A fingerprint with one ridge per pull request: ${red.length} red, ${green.length} green.`;
+
+for (const p of PRS) {
+  const r = ridges[p.ridge];
+  r.classList.add(p.verdict);
+  const t = document.createElementNS(SVG_NS, "title");
+  t.textContent = `${p.wallet}: ${p.title}`;
+  r.appendChild(t);
+}
+
+document.getElementById("red-head").textContent = `${red.length} easier to single out`;
+document.getElementById("green-head").textContent = `${green.length} blend in`;
+
+function item(p) {
+  const li = document.createElement("li");
+  li.className = "pr";
+  li.dataset.ridge = p.ridge;
+
+  const meta = document.createElement("p");
+  meta.className = "pr-meta";
+  const wallet = document.createElement("span");
+  wallet.className = "pr-wallet";
+  wallet.textContent = p.wallet;
+  meta.append(wallet, `${p.repo}#${p.pr}`);
+
+  const a = document.createElement("a");
+  a.className = "pr-title";
+  a.href = p.url;
+  a.textContent = p.title;
+
+  const reason = document.createElement("p");
+  reason.className = "pr-reason";
+  reason.textContent = p.reason;
+
+  li.append(meta, a, reason);
+
+  const on = () => { print.classList.add("focus"); ridges[p.ridge].classList.add("on"); };
+  const off = () => { print.classList.remove("focus"); ridges[p.ridge].classList.remove("on"); };
+  li.addEventListener("mouseenter", on);
+  li.addEventListener("mouseleave", off);
+  li.addEventListener("focusin", on);
+  li.addEventListener("focusout", off);
+  return li;
+}
+
+const byDate = (a, b) => (b.date || "").localeCompare(a.date || "");
+red.sort(byDate).forEach((p) => document.getElementById("red-list").appendChild(item(p)));
+green.sort(byDate).forEach((p) => document.getElementById("green-list").appendChild(item(p)));
+</script>
+</body>
+</html>

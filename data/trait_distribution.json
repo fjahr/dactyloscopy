@@ -1,0 +1,569 @@
+{
+ "nsequence": {
+  "group": "independent",
+  "label": "nSequence policy",
+  "values": {
+   "0xFFFFFFFD (RBF)": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum"
+   ],
+   "0xFFFFFFFF (MAX)": [
+    "Boltz",
+    "Bull Bitcoin"
+   ],
+   "[0x01, 0xFFFFFFD]": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "input_type": {
+  "group": "independent",
+  "label": "Input script type",
+  "values": {
+   "P2WPKH": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin"
+   ],
+   "P2WPKH (default)": [
+    "BTCPay Server",
+    "Bitcoin Core"
+   ],
+   "P2WSH / P2TR": [
+    "Liana"
+   ],
+   "any (swap type)": [
+    "Boltz"
+   ],
+   "P2WPKH (segwit default)": [
+    "Electrum"
+   ],
+   "mixed (P2WPKH/P2TR/P2SH/…)": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "input_ordering": {
+  "group": "independent",
+  "label": "Input ordering",
+  "values": {
+   "shuffle": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core"
+   ],
+   "BIP-69": [
+    "Boltz",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "selection order": [
+    "Liana"
+   ]
+  }
+ },
+ "tx_version": {
+  "group": "independent",
+  "label": "nVersion",
+  "values": {
+   "2": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "sampled (1 or 2)": [
+    "BTCPay Server"
+   ]
+  }
+ },
+ "single_type": {
+  "group": "independent",
+  "label": "Single input type",
+  "values": {
+   "yes": [
+    "ldk-node",
+    "Liana",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Electrum"
+   ],
+   "no": [
+    "payjoin-cli",
+    "Boltz",
+    "Cake Wallet"
+   ],
+   "prefers single, mixes": [
+    "Bitcoin Core"
+   ]
+  }
+ },
+ "num_outputs": {
+  "group": "independent",
+  "label": "Max recipients per tx",
+  "values": {
+   "multi-recipient": [
+    "Liana",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "single recipient": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin"
+   ],
+   "single-output sweep": [
+    "Boltz"
+   ]
+  }
+ },
+ "output_p2pkh": {
+  "group": "independent",
+  "label": "Sends to P2PKH",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "output_p2sh": {
+  "group": "independent",
+  "label": "Sends to P2SH",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "output_p2wpkh": {
+  "group": "independent",
+  "label": "Sends to P2WPKH",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "output_p2wsh": {
+  "group": "independent",
+  "label": "Sends to P2WSH",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "output_p2tr": {
+  "group": "independent",
+  "label": "Sends to P2TR",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "compressed_keys": {
+  "group": "independent",
+  "label": "Compressed ECDSA pubkeys",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "low_s": {
+  "group": "independent",
+  "label": "Canonical low-S sig (BIP146)",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "op_return": {
+  "group": "independent",
+  "label": "Emits OP_RETURN output",
+  "values": {
+   "no": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server"
+   ],
+   "yes": [
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "low_r": {
+  "group": "probabilistic",
+  "label": "Low-R grinding (71-byte ECDSA)",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "sampled (on-chain rate)": [
+    "BTCPay Server"
+   ]
+  }
+ },
+ "change_position": {
+  "group": "probabilistic",
+  "label": "Change position",
+  "values": {
+   "random": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core"
+   ],
+   "last (deterministic)": [
+    "Liana",
+    "Cake Wallet"
+   ],
+   "no change (sweep)": [
+    "Boltz"
+   ],
+   "BIP-69": [
+    "Electrum"
+   ]
+  }
+ },
+ "round_feerate": {
+  "group": "probabilistic",
+  "label": "Round-number feerate tell",
+  "values": {
+   "round only if custom": [
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Cake Wallet"
+   ],
+   "round (manual default)": [
+    "payjoin-cli",
+    "Liana"
+   ],
+   "round only if app passes custom": [
+    "ldk-node"
+   ],
+   "N/A (no fee surface)": [
+    "Boltz"
+   ],
+   "round only if manual fee_rate": [
+    "Bitcoin Core"
+   ],
+   "round if manual (0.1 precision)": [
+    "Electrum"
+   ]
+  }
+ },
+ "nlocktime": {
+  "group": "dependent",
+  "label": "nLockTime policy",
+  "values": {
+   "exact tip": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin"
+   ],
+   "anti-fee-sniping (±100 blocks)": [
+    "Bitcoin Core",
+    "Electrum"
+   ],
+   "anti-fee-sniping": [
+    "Liana"
+   ],
+   "swap timeout height": [
+    "Boltz"
+   ],
+   "sampled (anti-fee-sniping or 0)": [
+    "BTCPay Server"
+   ],
+   "0 (never set)": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "change_type": {
+  "group": "dependent",
+  "label": "Change output type",
+  "values": {
+   "matches payment": [
+    "payjoin-cli",
+    "Boltz",
+    "Bitcoin Core"
+   ],
+   "same as descriptor": [
+    "Liana",
+    "Bull Bitcoin"
+   ],
+   "matches inputs": [
+    "BTCPay Server",
+    "Electrum"
+   ],
+   "P2WPKH (descriptor)": [
+    "ldk-node"
+   ],
+   "P2WPKH (fixed)": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "sighash": {
+  "group": "dependent",
+  "label": "Taproot sighash (key-path)",
+  "values": {
+   "64-byte DEFAULT": [
+    "Liana",
+    "Boltz",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "N/A (ECDSA)": [
+    "payjoin-cli",
+    "ldk-node",
+    "Bull Bitcoin"
+   ]
+  }
+ },
+ "sighash_nonall": {
+  "group": "dependent",
+  "label": "Non-ALL sighash emitted",
+  "values": {
+   "no": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "opt-in via API": [
+    "Bitcoin Core"
+   ]
+  }
+ },
+ "change_matches_input": {
+  "group": "dependent",
+  "label": "Change address matches input",
+  "values": {
+   "no": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Bitcoin Core",
+    "Electrum",
+    "Cake Wallet"
+   ]
+  }
+ },
+ "uih2_avoidance": {
+  "group": "payjoin_specific",
+  "label": "UIH2 avoidance (receiver)",
+  "values": {
+   "yes": [
+    "payjoin-cli",
+    "ldk-node",
+    "Liana",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server"
+   ],
+   "N/A": [
+    "Bitcoin Core",
+    "Electrum"
+   ],
+   "no": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "utxo_order": {
+  "group": "payjoin_specific",
+  "label": "Receiver UTXO candidate ordering",
+  "values": {
+   "deterministic": [
+    "payjoin-cli",
+    "ldk-node",
+    "Boltz",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Cake Wallet"
+   ],
+   "N/A": [
+    "Bitcoin Core",
+    "Electrum"
+   ],
+   "non-deterministic": [
+    "Liana"
+   ]
+  }
+ },
+ "unconfirmed": {
+  "group": "temporal",
+  "label": "Contributes unconfirmed inputs",
+  "values": {
+   "yes": [
+    "ldk-node",
+    "Bull Bitcoin",
+    "BTCPay Server",
+    "Electrum",
+    "Cake Wallet"
+   ],
+   "no": [
+    "payjoin-cli",
+    "Liana",
+    "Boltz",
+    "Bitcoin Core"
+   ]
+  }
+ },
+ "feerate_source": {
+  "group": "temporal",
+  "label": "Feerate source",
+  "values": {
+   "user-input": [
+    "payjoin-cli"
+   ],
+   "backend-dependent": [
+    "ldk-node"
+   ],
+   "user-input (GUI)": [
+    "Liana"
+   ],
+   "mempool.space": [
+    "Boltz"
+   ],
+   "mempool.bullbitcoin.com": [
+    "Bull Bitcoin"
+   ],
+   "NBXplorer estimates (~1h default)": [
+    "BTCPay Server"
+   ],
+   "estimatesmartfee (target 6)": [
+    "Bitcoin Core"
+   ],
+   "ElectrumX eta:2 / mempool": [
+    "Electrum"
+   ],
+   "mempool.cakewallet.com": [
+    "Cake Wallet"
+   ]
+  }
+ },
+ "rbf_replacement": {
+  "group": "temporal",
+  "label": "RBF replacement behavior",
+  "values": {
+   "separate builder": [
+    "ldk-node",
+    "Bull Bitcoin"
+   ],
+   "reuses send path": [
+    "Liana",
+    "Cake Wallet"
+   ],
+   "none": [
+    "payjoin-cli"
+   ],
+   "server-auto (refund)": [
+    "Boltz"
+   ],
+   "dedicated bump (no randomization)": [
+    "BTCPay Server"
+   ],
+   "dedicated feebumper": [
+    "Bitcoin Core"
+   ],
+   "dedicated bump_fee": [
+    "Electrum"
+   ]
+  }
+ }
+}
