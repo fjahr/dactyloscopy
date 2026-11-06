@@ -1,4 +1,9 @@
-# Dactyloscopy
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logo/dactyloscopy-logo-dark.svg">
+    <img alt="Dactyloscopy" src="logo/dactyloscopy-logo.svg" width="420">
+  </picture>
+</h1>
 
 Wallets give themselves away through small choices in how they build transactions. Dactyloscopy lists open pull requests in Bitcoin wallets that would change those choices:
 
